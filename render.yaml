@@ -1,0 +1,37 @@
+services:
+  # Auth Server
+  - type: web
+    name: server-dashboard-auth
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: cd auth-server && npm install
+    startCommand: cd auth-server && node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: TOTP_SECRET
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        value: https://server-dashboard.onrender.com
+    healthCheckPath: /health
+
+  # Static Site (Dashboard)
+  - type: web
+    name: server-dashboard
+    env: static
+    region: oregon
+    plan: free
+    buildCommand: echo "No build needed"
+    staticPublishPath: .
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: AUTH_API_URL
+        value: https://server-dashboard-auth.onrender.com
