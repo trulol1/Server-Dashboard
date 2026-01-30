@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "postinstall": "cd auth-server && npm install",
+    "prestart": "npm --prefix auth-server install",
     "start": "node auth-server/server.js"
   }
 }
