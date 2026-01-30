@@ -5,24 +5,30 @@ const API_BASE_URL = window.API_BASE_URL || `${window.location.origin}/api`;
 class AuthAPI {
   constructor() {
     this.token = null;
+    this.isAdmin = false;
     this.loadTokenFromStorage();
   }
 
   // Load token from localStorage on page load
   loadTokenFromStorage() {
     this.token = localStorage.getItem('authToken');
+    this.isAdmin = localStorage.getItem('isAdmin') === 'true';
   }
 
   // Save token to localStorage
-  saveToken(token) {
+  saveToken(token, isAdmin = false) {
     this.token = token;
+    this.isAdmin = isAdmin;
     localStorage.setItem('authToken', token);
+    localStorage.setItem('isAdmin', isAdmin.toString());
   }
 
   // Clear token from storage
   clearToken() {
     this.token = null;
+    this.isAdmin = false;
     localStorage.removeItem('authToken');
+    localStorage.removeItem('isAdmin');
   }
 
   // Get authorization header
@@ -114,9 +120,38 @@ class AuthAPI {
     this.clearToken();
   }
 
+  // Admin login for debugging (username/password)
+  async adminLogin(username, password) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/admin-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Admin login failed');
+      }
+
+      // Re-use the same token store so admin tokens unlock the dashboard
+      this.saveToken(data.token, data.role === 'admin');
+      return { success: true, token: data.token, role: data.role };
+    } catch (error) {
+      console.error('Admin login error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
   // Check if authenticated
   isAuthenticated() {
     return this.token !== null && this.token !== undefined;
+  }
+
+  // Check if logged in as admin
+  isUserAdmin() {
+    return this.isAdmin === true;
   }
 }
 
