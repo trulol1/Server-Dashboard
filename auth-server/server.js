@@ -53,12 +53,16 @@ app.use(cors({
 // Initialize or load TOTP secret
 let TOTP_SECRET = (process.env.TOTP_SECRET || '').trim();
 const secretFile = path.join(__dirname, '.totp-secret');
-if (fs.existsSync(secretFile)) {
+if (TOTP_SECRET) {
+  if (!fs.existsSync(secretFile)) {
+    fs.writeFileSync(secretFile, TOTP_SECRET);
+    console.log('🔐 Saved TOTP secret from environment to .totp-secret file');
+  } else {
+    console.log('🔐 Using TOTP secret from environment (file present but ignored)');
+  }
+} else if (fs.existsSync(secretFile)) {
   TOTP_SECRET = fs.readFileSync(secretFile, 'utf8').trim();
   console.log('🔑 Loaded existing TOTP secret from .totp-secret file');
-} else if (TOTP_SECRET) {
-  fs.writeFileSync(secretFile, TOTP_SECRET);
-  console.log('🔐 Saved TOTP secret from environment to .totp-secret file');
 } else {
   // Generate new secret
   const secret = speakeasy.generateSecret({
