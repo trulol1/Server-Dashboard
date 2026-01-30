@@ -1,6 +1,8 @@
 // API communication module for authentication
-// Allows override via <script>window.API_BASE_URL = "https://your-backend.com/api"</script> in HTML
-const API_BASE_URL = window.API_BASE_URL || `${window.location.origin}/api`;
+// Allows override via window.API_BASE_URL, meta tag, or localStorage
+const metaApiBase = document.querySelector('meta[name="auth-api-base"]')?.getAttribute('content');
+const storedApiBase = localStorage.getItem('authApiBase');
+const API_BASE_URL = window.API_BASE_URL || metaApiBase || storedApiBase || `${window.location.origin}/api`;
 
 class AuthAPI {
   constructor() {

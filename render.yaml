@@ -1,4 +1,4 @@
-# Exported from Render on 2026-01-27T08:12:25Z
+# Exported from Render on 2026-01-30T04:26:07Z
 version: "1"
 projects:
 - name: My project
@@ -17,11 +17,8 @@ projects:
         sync: false
       - key: JWT_SECRET
         sync: false
-      - key: ADMIN_USER
-        value: admin
-      - key: ADMIN_PASS
-        value: skibiditoilet
       region: virginia
-      buildCommand: cd auth-server && npm install
-      startCommand: cd auth-server && node server.js
+      buildCommand: npm install
+      startCommand: node server.js
       autoDeployTrigger: commit
+      rootDir: auth-server
