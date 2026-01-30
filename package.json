@@ -1,0 +1,9 @@
+{
+  "name": "serverindex-root",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "postinstall": "cd auth-server && npm install",
+    "start": "node auth-server/server.js"
+  }
+}
