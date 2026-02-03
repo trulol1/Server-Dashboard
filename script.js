@@ -86,6 +86,49 @@ prefMuteMusic.addEventListener('change', () => { preferences.muteMusic = prefMut
 prefSkipReincarnation.addEventListener('change', () => { preferences.skipReincarnationCutscene = prefSkipReincarnation.checked; savePreferences(); });
 prefSkipAll.addEventListener('change', () => { preferences.skipAllCutscenes = prefSkipAll.checked; savePreferences(); });
 
+// Cutscene system
+const cutsceneModal = document.getElementById('cutsceneModal');
+const cutsceneVideo = document.getElementById('cutsceneVideo');
+
+function hideCutscene() {
+  if (cutsceneModal) {
+    cutsceneModal.classList.add('hidden');
+    if (cutsceneVideo) {
+      cutsceneVideo.pause();
+      cutsceneVideo.src = '';
+    }
+  }
+}
+
+function showCutscene(videoPath) {
+  if (!cutsceneModal || !cutsceneVideo) return;
+  cutsceneVideo.src = videoPath;
+  cutsceneModal.classList.remove('hidden');
+  cutsceneVideo.play();
+}
+
+document.addEventListener('cutscene', (e) => {
+  const { type, detail } = e;
+  
+  if (type === 'displacement-incident') {
+    showCutscene('assets/game-assets/young-rudeus/displacement-incident.mp4');
+  }
+});
+
+if (cutsceneModal) {
+  cutsceneModal.addEventListener('click', hideCutscene);
+}
+
+if (cutsceneVideo) {
+  cutsceneVideo.addEventListener('ended', hideCutscene);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && cutsceneModal && !cutsceneModal.classList.contains('hidden')) {
+    hideCutscene();
+  }
+});
+
 generateSaveCodeBtn.addEventListener('click', () => {
   try {
     const code = generateSaveCode();
@@ -997,9 +1040,17 @@ const guidesData = [
     title: 'Clicker Game',
     description: 'Simple clicker game to pass the time',
     icon: '🎮',
-    url: '#',
+    url: 'clicker.html',
     category: 'Game',
-    isGame: true
+    openInNewTab: false
+  },
+  {
+    title: 'Anime',
+    description: 'Top rated anime and search powered by MyAnimeList data',
+    icon: '🍿',
+    url: 'anime.html',
+    category: 'Entertainment',
+    openInNewTab: false
   }
 ];
 
@@ -1258,7 +1309,9 @@ function renderGuides() {
       // Create regular link card
       guideCard = document.createElement('a');
       guideCard.href = guide.url;
-      guideCard.target = '_blank';
+      if (guide.openInNewTab !== false) {
+        guideCard.target = '_blank';
+      }
       guideCard.className = 'service-card rounded-xl bg-slate-800 hover:bg-slate-700 hover:shadow-xl p-5 shadow-lg cursor-pointer block transition-all';
     }
     
