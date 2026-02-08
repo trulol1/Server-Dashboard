@@ -793,6 +793,7 @@ function showDashboard() {
   // Show admin messages button if authenticated
   if (authAPI.isAuthenticated() && adminMessagesBtn) {
     adminMessagesBtn.classList.remove('hidden');
+    console.log('Admin messages button shown');
   }
   
   // Set random main dashboard background
