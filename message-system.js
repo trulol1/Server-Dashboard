@@ -120,18 +120,40 @@ if (adminMessagesBtn) {
 }
 
 if (closeMessageModalBtn) {
-  closeMessageModalBtn.addEventListener('click', () => {
+  closeMessageModalBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
     messageModal.classList.add('hidden');
   });
 }
 
 if (postMessageBtn) {
-  postMessageBtn.addEventListener('click', postMessage);
+  postMessageBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    postMessage();
+  });
+}
+
+// Close modal when clicking backdrop (but not modal content)
+if (messageModal) {
+  messageModal.addEventListener('click', (e) => {
+    if (e.target === messageModal) {
+      messageModal.classList.add('hidden');
+    }
+  });
+  
+  // Prevent clicks inside modal from closing it
+  const modalContent = messageModal.querySelector('.bg-slate-800');
+  if (modalContent) {
+    modalContent.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
 }
 
 // Color selection
 document.querySelectorAll('.color-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
     selectedColor = btn.dataset.color;
     document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('ring-2'));
     btn.classList.add('ring-2');
@@ -141,4 +163,4 @@ document.querySelectorAll('.color-btn').forEach(btn => {
 // Load messages on dashboard load
 loadMessages();
 setInterval(loadMessages, 30000); // Refresh every 30 seconds
-}
+
