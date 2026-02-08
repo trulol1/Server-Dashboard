@@ -4,6 +4,8 @@ const currentPage = window.location.pathname.includes('/landing') ? 'landing' : 
 
 // Load and display messages
 async function loadMessages() {
+  if (!messagesContainer) return; // Exit if container doesn't exist
+  
   try {
     const response = await fetch(`${API_BASE_URL}/messages`);
     const messages = await response.json();
@@ -14,6 +16,8 @@ async function loadMessages() {
 }
 
 function displayMessages(messages) {
+  if (!messagesContainer) return; // Exit if container doesn't exist
+  
   messagesContainer.innerHTML = '';
   
   // Filter messages based on current page
@@ -160,7 +164,9 @@ document.querySelectorAll('.color-btn').forEach(btn => {
   });
 });
 
-// Load messages on dashboard load
-loadMessages();
-setInterval(loadMessages, 30000); // Refresh every 30 seconds
+// Load messages on dashboard load (only if container exists)
+if (messagesContainer) {
+  loadMessages();
+  setInterval(loadMessages, 30000); // Refresh every 30 seconds
+}
 
