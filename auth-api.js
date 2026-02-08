@@ -58,8 +58,8 @@ class AuthAPI {
         throw new Error(data.error || 'Login failed');
       }
 
-      this.saveToken(data.token);
-      return { success: true, token: data.token };
+      this.saveToken(data.token, data.role === 'admin');
+      return { success: true, token: data.token, role: data.role };
     } catch (error) {
       console.error('Login error:', error);
       return { success: false, error: error.message };

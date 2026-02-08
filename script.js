@@ -790,10 +790,12 @@ function showDashboard() {
 
   updateAdminUI();
   
-  // Show admin messages button if authenticated
-  if (authAPI.isAuthenticated() && adminMessagesBtn) {
+  // Show admin messages button only for admin users
+  if (authAPI.isUserAdmin() && adminMessagesBtn) {
     adminMessagesBtn.classList.remove('hidden');
     console.log('Admin messages button shown');
+  } else if (adminMessagesBtn) {
+    adminMessagesBtn.classList.add('hidden');
   }
   
   // Set random main dashboard background

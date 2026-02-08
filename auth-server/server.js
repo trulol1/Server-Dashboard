@@ -108,6 +108,13 @@ const verifyToken = (req, res, next) => {
   }
 };
 
+const requireAdmin = (req, res, next) => {
+  if (req.user?.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  next();
+};
+
 // Get setup QR code (first time only)
 app.get('/api/auth/setup', async (req, res) => {
   try {
@@ -159,7 +166,7 @@ app.post('/api/auth/login', (req, res) => {
 
   // Generate JWT token (expires in 24 hours)
   const token = jwt.sign(
-    { authenticated: true, timestamp: Date.now() },
+    { authenticated: true, role: 'admin', timestamp: Date.now() },
     JWT_SECRET,
     { expiresIn: '24h' }
   );
@@ -167,6 +174,7 @@ app.post('/api/auth/login', (req, res) => {
   res.json({
     success: true,
     token,
+    role: 'admin',
     expiresIn: 86400 // 24 hours in seconds
   });
 });
@@ -222,8 +230,8 @@ app.get('/api/messages', (req, res) => {
   res.json(activeMessages);
 });
 
-app.post('/api/messages', verifyToken, (req, res) => {
-  const { text, color, duration, showOnLanding, showOnDashboard } = req.body;
+app.post('/api/messages', verifyToken, requireAdmin, (req, res) => {
+  const { text, color, duration } = req.body;
   
   if (!text) {
     return res.status(400).json({ error: 'Message text required' });
@@ -236,8 +244,8 @@ app.post('/api/messages', verifyToken, (req, res) => {
     duration: duration || 0,
     createdAt: Date.now(),
     expiresAt: duration > 0 ? Date.now() + (duration * 1000) : null,
-    showOnLanding: showOnLanding !== false, // Default to true
-    showOnDashboard: showOnDashboard !== false // Default to true
+    showOnLanding: true,
+    showOnDashboard: true
   };
 
   messages.push(message);
@@ -245,7 +253,7 @@ app.post('/api/messages', verifyToken, (req, res) => {
   res.json({ success: true, message });
 });
 
-app.delete('/api/messages/:id', verifyToken, (req, res) => {
+app.delete('/api/messages/:id', verifyToken, requireAdmin, (req, res) => {
   const { id } = req.params;
   messages = messages.filter(msg => msg.id !== id);
   saveMessages();

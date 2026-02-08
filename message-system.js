@@ -20,16 +20,7 @@ function displayMessages(messages) {
   
   messagesContainer.innerHTML = '';
   
-  // Filter messages based on current page
-  const filteredMessages = messages.filter(msg => {
-    if (currentPage === 'landing') {
-      return msg.showOnLanding !== false; // Show if true or undefined (backwards compatibility)
-    } else {
-      return msg.showOnDashboard !== false; // Show if true or undefined (backwards compatibility)
-    }
-  });
-  
-  filteredMessages.forEach(msg => {
+  messages.forEach(msg => {
     const messageEl = document.createElement('div');
     messageEl.className = 'mb-4 p-4 rounded-lg shadow-lg animate-slideDown flex items-center justify-between';
     messageEl.style.backgroundColor = msg.color + '20';
@@ -44,8 +35,8 @@ function displayMessages(messages) {
     deleteBtn.textContent = '✕';
     deleteBtn.onclick = () => deleteMessage(msg.id);
     
-    // Only show delete button if authenticated
-    if (typeof authAPI !== 'undefined' && authAPI.isAuthenticated()) {
+    // Only show delete button if admin
+    if (typeof authAPI !== 'undefined' && authAPI.isUserAdmin()) {
       messageEl.appendChild(textEl);
       messageEl.appendChild(deleteBtn);
     } else {
@@ -59,16 +50,11 @@ function displayMessages(messages) {
 async function postMessage() {
   const text = messageText.value.trim();
   const duration = parseInt(messageDuration.value) || 0;
-  const showOnLanding = document.getElementById('showOnLanding').checked;
-  const showOnDashboard = document.getElementById('showOnDashboard').checked;
+  const showOnLanding = true;
+  const showOnDashboard = true;
   
   if (!text) {
     alert('Please enter a message');
-    return;
-  }
-  
-  if (!showOnLanding && !showOnDashboard) {
-    alert('Please select at least one page to show the message on');
     return;
   }
   
@@ -88,8 +74,6 @@ async function postMessage() {
     if (response.ok) {
       messageText.value = '';
       messageDuration.value = '0';
-      document.getElementById('showOnLanding').checked = true;
-      document.getElementById('showOnDashboard').checked = true;
       messageModal.classList.add('hidden');
       loadMessages();
     } else {
