@@ -263,17 +263,8 @@
   </div>
 
   <header>
-    <div class="flex items-center justify-between flex-wrap gap-4">
-      <div>
-        <h1>SLYPHIE'S HUB</h1>
-        <p>UNIFIED SERVER ACCESS</p>
-      </div>
-      <div class="flex gap-2">
-        <button id="adminMessagesBtn" class="hidden px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-all duration-300 text-sm font-semibold" style="color: white;">📢 Post Message</button>
-        <button id="adminLoginBtn" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all duration-300 text-sm font-semibold" style="color: white;">🔐 Admin Login</button>
-        <button id="logoutBtn" class="hidden px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all duration-300 text-sm font-semibold" style="color: white;">Logout</button>
-      </div>
-    </div>
+    <h1>SLYPHIE'S HUB</h1>
+    <p>UNIFIED SERVER ACCESS</p>
   </header>
 
   <!-- Messages Container -->
@@ -301,90 +292,6 @@
     <p>© 2026 Slyphie's Hub | All services secured and private</p>
   </footer>
 
-  <!-- Auth Modal -->
-  <div id="authModal" class="hidden fixed inset-0 bg-black bg-opacity-90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-8 w-full max-w-md">
-      <h2 class="text-3xl font-bold mb-6 text-slate-100 text-center">Admin Login</h2>
-      <form id="authForm" class="space-y-4">
-        <div>
-          <label class="block text-slate-400 mb-2">6-Digit Code</label>
-          <input 
-            id="totpInput" 
-            type="text" 
-            placeholder="000000" 
-            maxlength="6"
-            class="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-2xl tracking-widest"
-          >
-        </div>
-        <button 
-          type="submit" 
-          class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all"
-        >
-          Login
-        </button>
-      </form>
-      <div class="mt-4 text-center">
-        <button id="closeAuthModal" type="button" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all text-sm">
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Admin Message Modal -->
-  <div id="messageModal" class="hidden fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-    <div class="bg-slate-800 rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
-      <div class="p-8">
-        <h2 class="text-2xl font-bold mb-6 text-slate-100">Post Dashboard Message</h2>
-        
-        <div class="space-y-4">
-          <div>
-            <label class="block text-slate-300 mb-2">Message Text</label>
-            <textarea id="messageText" class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Enter your message..."></textarea>
-          </div>
-
-          <div>
-            <label class="block text-slate-300 mb-2">Color</label>
-            <div class="grid grid-cols-4 gap-2">
-              <button type="button" class="color-btn w-full h-12 rounded-lg bg-blue-500 hover:ring-2 ring-white transition" data-color="#3b82f6"></button>
-              <button type="button" class="color-btn w-full h-12 rounded-lg bg-green-500 hover:ring-2 ring-white transition" data-color="#10b981"></button>
-              <button type="button" class="color-btn w-full h-12 rounded-lg bg-yellow-500 hover:ring-2 ring-white transition" data-color="#f59e0b"></button>
-              <button type="button" class="color-btn w-full h-12 rounded-lg bg-red-500 hover:ring-2 ring-white transition" data-color="#ef4444"></button>
-              <button type="button" class="color-btn w-full h-12 rounded-lg bg-purple-500 hover:ring-2 ring-white transition" data-color="#a855f7"></button>
-              <button type="button" class="color-btn w-full h-12 rounded-lg bg-pink-500 hover:ring-2 ring-white transition" data-color="#ec4899"></button>
-              <button type="button" class="color-btn w-full h-12 rounded-lg bg-indigo-500 hover:ring-2 ring-white transition" data-color="#6366f1"></button>
-              <button type="button" class="color-btn w-full h-12 rounded-lg bg-slate-500 hover:ring-2 ring-white transition" data-color="#64748b"></button>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-slate-300 mb-2">Duration (seconds, 0 = permanent)</label>
-            <input type="number" id="messageDuration" class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500" value="0" min="0" placeholder="0">
-          </div>
-
-          <div>
-            <label class="block text-slate-300 mb-2">Show on Pages</label>
-            <div class="space-y-2">
-              <label class="flex items-center gap-2 text-slate-300 cursor-pointer">
-                <input type="checkbox" id="showOnLanding" checked class="w-4 h-4 accent-blue-500 cursor-pointer">
-                <span>Landing Page</span>
-              </label>
-              <label class="flex items-center gap-2 text-slate-300 cursor-pointer">
-                <input type="checkbox" id="showOnDashboard" checked class="w-4 h-4 accent-blue-500 cursor-pointer">
-                <span>Dashboard</span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex gap-3 mt-6">
-          <button type="button" id="postMessageBtn" class="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition cursor-pointer">Post Message</button>
-          <button type="button" id="closeMessageModalBtn" class="px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition cursor-pointer">Cancel</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- API Configuration -->
   <meta name="auth-api-base" content="https://serverindex1.onrender.com/api" />
   
@@ -393,81 +300,8 @@
   <script>
     // Initialize API_BASE_URL for message system
     const API_BASE_URL = authAPI.apiBase;
-    
-    // Get elements
     const messagesContainer = document.getElementById('messagesContainer');
-    const adminLoginBtn = document.getElementById('adminLoginBtn');
-    const adminMessagesBtn = document.getElementById('adminMessagesBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const authModal = document.getElementById('authModal');
-    const messageModal = document.getElementById('messageModal');
-    const closeAuthModal = document.getElementById('closeAuthModal');
-    const authForm = document.getElementById('authForm');
-    const totpInput = document.getElementById('totpInput');
     let selectedColor = '#3b82f6';
-    
-    // Check if user is authenticated
-    function checkAuth() {
-      if (authAPI.isAuthenticated()) {
-        adminLoginBtn.classList.add('hidden');
-        adminMessagesBtn.classList.remove('hidden');
-        logoutBtn.classList.remove('hidden');
-      } else {
-        adminLoginBtn.classList.remove('hidden');
-        adminMessagesBtn.classList.add('hidden');
-        logoutBtn.classList.add('hidden');
-      }
-    }
-    
-    // Show auth modal
-    adminLoginBtn.addEventListener('click', () => {
-      authModal.classList.remove('hidden');
-      totpInput.focus();
-    });
-    
-    // Close auth modal
-    closeAuthModal.addEventListener('click', () => {
-      authModal.classList.add('hidden');
-      totpInput.value = '';
-    });
-    
-    // Handle login
-    authForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const code = totpInput.value.trim();
-      
-      if (code.length !== 6) {
-        alert('Please enter a 6-digit code');
-        return;
-      }
-      
-      try {
-        const result = await authAPI.login(code);
-        if (result.success) {
-          authModal.classList.add('hidden');
-          totpInput.value = '';
-          checkAuth();
-          alert('Logged in successfully!');
-        } else {
-          alert('Invalid code. Please try again.');
-          totpInput.value = '';
-          totpInput.focus();
-        }
-      } catch (error) {
-        alert('Login failed. Please try again.');
-        console.error(error);
-      }
-    });
-    
-    // Handle logout
-    logoutBtn.addEventListener('click', () => {
-      authAPI.logout();
-      checkAuth();
-      alert('Logged out successfully');
-    });
-    
-    // Check auth on load
-    checkAuth();
   </script>
   <script src="message-system.js"></script>
 
