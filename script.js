@@ -17,6 +17,7 @@ const adminError = document.getElementById('adminError');
 const adminClose = document.getElementById('adminClose');
 const adminCodeInput = document.getElementById('adminCodeInput');
 const debugMenuBtn = document.getElementById('debugMenuBtn');
+const debugMenuBtnHeader = document.getElementById('debugMenuBtnHeader');
 const debugMenuModal = document.getElementById('debugMenuModal');
 const debugClose = document.getElementById('debugClose');
 const debugCloseBtn = document.getElementById('debugCloseBtn');
@@ -70,6 +71,7 @@ function triggerCutscene(type, detail = {}) {
 
 // Preferences and Options
 const optionsBtn = document.getElementById('optionsBtn');
+const optionsBtnHeader = document.getElementById('optionsBtnHeader');
 const optionsModal = document.getElementById('optionsModal');
 const optionsClose = document.getElementById('optionsClose');
 const optionsCloseBtn = document.getElementById('optionsCloseBtn');
@@ -89,6 +91,9 @@ applyPreferencesToUI();
 applyMutePreference();
 
 optionsBtn.addEventListener('click', () => { optionsModal.classList.remove('hidden'); });
+if (optionsBtnHeader) {
+  optionsBtnHeader.addEventListener('click', () => { optionsModal.classList.remove('hidden'); });
+}
 optionsClose.addEventListener('click', () => { optionsModal.classList.add('hidden'); });
 optionsCloseBtn.addEventListener('click', () => { optionsModal.classList.add('hidden'); });
 
@@ -777,8 +782,14 @@ function updateAdminUI() {
   // Show debug button if admin
   if (authAPI.isUserAdmin()) {
     debugMenuBtn.classList.remove('hidden');
+    if (debugMenuBtnHeader) {
+      debugMenuBtnHeader.classList.remove('hidden');
+    }
   } else {
     debugMenuBtn.classList.add('hidden');
+    if (debugMenuBtnHeader) {
+      debugMenuBtnHeader.classList.add('hidden');
+    }
   }
 }
 
@@ -915,6 +926,9 @@ function closeDebugMenu() {
 }
 
 debugMenuBtn.addEventListener('click', openDebugMenu);
+if (debugMenuBtnHeader) {
+  debugMenuBtnHeader.addEventListener('click', openDebugMenu);
+}
 debugClose.addEventListener('click', closeDebugMenu);
 debugCloseBtn.addEventListener('click', closeDebugMenu);
 
