@@ -267,6 +267,9 @@
     <p>UNIFIED SERVER ACCESS</p>
   </header>
 
+  <!-- Messages Container -->
+  <div id="messagesContainer" class="container" style="max-width: 1200px; margin: 2rem auto;"></div>
+
   <div class="container">
     <div class="services">
       <div class="service-card">
@@ -288,6 +291,21 @@
   <footer>
     <p>© 2026 Slyphie's Hub | All services secured and private</p>
   </footer>
+
+  <!-- API Configuration -->
+  <meta name="auth-api-base" content="https://serverindex1.onrender.com/api" />
+  
+  <!-- Scripts -->
+  <script src="auth-api.js"></script>
+  <script>
+    // Initialize API_BASE_URL for message system
+    const API_BASE_URL = authAPI.apiBase;
+    
+    // Minimal messagesContainer and selectedColor for message-system.js
+    const messagesContainer = document.getElementById('messagesContainer');
+    let selectedColor = '#3b82f6';
+  </script>
+  <script src="message-system.js"></script>
 
   <script>
     // Scroll-based blob animation

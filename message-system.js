@@ -1,4 +1,7 @@
 // Message System for Admin Dashboard
+// Determine if we're on the landing page or dashboard
+const currentPage = window.location.pathname.includes('/landing') ? 'landing' : 'dashboard';
+
 // Load and display messages
 async function loadMessages() {
   try {
@@ -12,7 +15,17 @@ async function loadMessages() {
 
 function displayMessages(messages) {
   messagesContainer.innerHTML = '';
-  messages.forEach(msg => {
+  
+  // Filter messages based on current page
+  const filteredMessages = messages.filter(msg => {
+    if (currentPage === 'landing') {
+      return msg.showOnLanding !== false; // Show if true or undefined (backwards compatibility)
+    } else {
+      return msg.showOnDashboard !== false; // Show if true or undefined (backwards compatibility)
+    }
+  });
+  
+  filteredMessages.forEach(msg => {
     const messageEl = document.createElement('div');
     messageEl.className = 'mb-4 p-4 rounded-lg shadow-lg animate-slideDown flex items-center justify-between';
     messageEl.style.backgroundColor = msg.color + '20';
@@ -28,7 +41,7 @@ function displayMessages(messages) {
     deleteBtn.onclick = () => deleteMessage(msg.id);
     
     // Only show delete button if authenticated
-    if (authAPI.isAuthenticated()) {
+    if (typeof authAPI !== 'undefined' && authAPI.isAuthenticated()) {
       messageEl.appendChild(textEl);
       messageEl.appendChild(deleteBtn);
     } else {
@@ -42,9 +55,16 @@ function displayMessages(messages) {
 async function postMessage() {
   const text = messageText.value.trim();
   const duration = parseInt(messageDuration.value) || 0;
+  const showOnLanding = document.getElementById('showOnLanding').checked;
+  const showOnDashboard = document.getElementById('showOnDashboard').checked;
   
   if (!text) {
     alert('Please enter a message');
+    return;
+  }
+  
+  if (!showOnLanding && !showOnDashboard) {
+    alert('Please select at least one page to show the message on');
     return;
   }
   
@@ -55,13 +75,17 @@ async function postMessage() {
       body: JSON.stringify({
         text,
         color: selectedColor,
-        duration
+        duration,
+        showOnLanding,
+        showOnDashboard
       })
     });
     
     if (response.ok) {
       messageText.value = '';
       messageDuration.value = '0';
+      document.getElementById('showOnLanding').checked = true;
+      document.getElementById('showOnDashboard').checked = true;
       messageModal.classList.add('hidden');
       loadMessages();
     } else {
@@ -115,7 +139,6 @@ document.querySelectorAll('.color-btn').forEach(btn => {
 });
 
 // Load messages on dashboard load
-if (authAPI.isAuthenticated()) {
-  loadMessages();
-  setInterval(loadMessages, 30000); // Refresh every 30 seconds
+loadMessages();
+setInterval(loadMessages, 30000); // Refresh every 30 seconds
 }

@@ -223,7 +223,7 @@ app.get('/api/messages', (req, res) => {
 });
 
 app.post('/api/messages', verifyToken, (req, res) => {
-  const { text, color, duration } = req.body;
+  const { text, color, duration, showOnLanding, showOnDashboard } = req.body;
   
   if (!text) {
     return res.status(400).json({ error: 'Message text required' });
@@ -235,7 +235,9 @@ app.post('/api/messages', verifyToken, (req, res) => {
     color: color || '#3b82f6',
     duration: duration || 0,
     createdAt: Date.now(),
-    expiresAt: duration > 0 ? Date.now() + (duration * 1000) : null
+    expiresAt: duration > 0 ? Date.now() + (duration * 1000) : null,
+    showOnLanding: showOnLanding !== false, // Default to true
+    showOnDashboard: showOnDashboard !== false // Default to true
   };
 
   messages.push(message);

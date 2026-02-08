@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 
-<body class="bg-slate-900 text-slate-100 min-h-screen overflow-hidden auth-active">
+<body class="bg-slate-900 text-slate-100 min-h-screen overflow-y-auto auth-active">
 
   <!-- Authentication Modal -->
   <div id="authModal" class="fixed inset-0 flex items-center justify-center backdrop-blur-sm animate-fadeIn z-50 w-screen h-screen">
@@ -526,6 +526,20 @@
         <div>
           <label class="block text-slate-300 mb-2">Duration (seconds, 0 = permanent)</label>
           <input type="number" id="messageDuration" class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500" value="0" min="0" placeholder="0">
+        </div>
+
+        <div>
+          <label class="block text-slate-300 mb-2">Show on Pages</label>
+          <div class="space-y-2">
+            <label class="flex items-center gap-2 text-slate-300">
+              <input type="checkbox" id="showOnLanding" checked class="w-4 h-4 accent-blue-500">
+              <span>Landing Page</span>
+            </label>
+            <label class="flex items-center gap-2 text-slate-300">
+              <input type="checkbox" id="showOnDashboard" checked class="w-4 h-4 accent-blue-500">
+              <span>Dashboard</span>
+            </label>
+          </div>
         </div>
       </div>
 
