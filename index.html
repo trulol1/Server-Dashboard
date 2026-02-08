@@ -47,6 +47,9 @@
 
       <div class="mt-6 text-center text-slate-500 text-sm">
         <p>Using <span class="text-slate-400 font-mono">Google Authenticator</span> or similar app</p>
+        <button onclick="window.location.href='/'" type="button" class="mt-4 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all duration-300 text-sm text-slate-100">
+          ← Back to Home
+        </button>
         <button id="showSetupBtn" type="button" class="mt-3 text-blue-400 hover:text-blue-300 underline text-xs">
           Don't have it set up?
         </button>
@@ -73,7 +76,7 @@
 
   <!-- Main Dashboard (Hidden until authenticated) -->
   <div id="dashboard" class="hidden">
-    <header class="mb-8 animate-slideDown">
+    <header class="mb-8 animate-slideDown px-6">
       <div class="flex items-center justify-between flex-wrap gap-4">
         <div class="flex items-center gap-4">
           <div class="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
@@ -82,47 +85,55 @@
           <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Home Lab Dashboard</h1>
         </div>
         <div class="flex gap-2">
+          <button onclick="window.location.href='/'" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all duration-300 text-sm">← Back to Home</button>
           <button id="logoutBtn" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all duration-300 text-sm">Logout</button>
         </div>
       </div>
       <p class="text-slate-500 mt-4 text-sm"><span id="dateTime"></span></p>
     </header>
 
-    <main class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+    <main class="flex justify-center">
+      <div class="w-full max-w-6xl">
+        <h2 class="text-3xl font-bold mb-6 text-slate-100 px-6">🎮 Servers</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 p-6 place-items-center">
 
-      <!-- Service Card - Game Servers -->
-      <div class="service-card rounded-xl bg-slate-800 hover:bg-slate-700 hover:shadow-xl p-5 shadow-lg cursor-pointer" data-server="minecraft">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold">Game Servers</h2>
-          <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-            <img src="assets/icons/minecraft-server-icon.gif" alt="Game Servers" class="w-full h-full">
+          <!-- Service Card - Game Servers -->
+          <div class="service-card rounded-xl bg-slate-800 hover:bg-slate-700 hover:shadow-xl p-5 shadow-lg cursor-pointer w-full" data-server="minecraft">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-xl font-semibold">Game Servers</h3>
+              <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                <img src="assets/icons/minecraft-server-icon.gif" alt="Game Servers" class="w-full h-full">
+              </div>
+            </div>
+            <p class="text-slate-400 mt-2">Browse and manage game servers</p>
+            <span class="text-green-400 mt-4 inline-block status-badge">● Online</span>
+            <p class="text-slate-500 text-xs mt-3">Click for details</p>
           </div>
-        </div>
-        <p class="text-slate-400 mt-2">Browse and manage game servers</p>
-        <span class="text-green-400 mt-4 inline-block status-badge">● Online</span>
-        <p class="text-slate-500 text-xs mt-3">Click for details</p>
-      </div>
 
-      <!-- Service Card - Jellyfin -->
-      <div class="service-card rounded-xl bg-slate-800 hover:bg-slate-700 hover:shadow-xl p-5 shadow-lg cursor-pointer" data-server="jellyfin">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold">Jellyfin</h2>
-          <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-            <img src="assets/icons/jellyfin-server-icon.gif" alt="Jellyfin" class="w-full h-full">
+          <!-- Anime Card -->
+          <div class="guide-card rounded-xl bg-slate-800 hover:bg-slate-700 hover:shadow-xl p-5 shadow-lg cursor-pointer w-full" onclick="window.open('anime.html', '_self')">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-xl font-semibold">Anime</h3>
+              <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                <img src="assets/icons/anime-icon.png" alt="Anime" class="w-full h-full" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%236366f1%22%3E%3Ctext x=%2212%22 y=%2220%22 font-size=%2224%22 text-anchor=%22middle%22%3E🎌%3C/text%3E%3C/svg%3E'">
+              </div>
+            </div>
+            <p class="text-slate-400 mt-2">Top rated anime and search powered by MyAnimeList data</p>
+            <span class="text-blue-400 mt-4 inline-block status-badge">● Available</span>
+            <p class="text-slate-500 text-xs mt-3">Click to browse</p>
           </div>
-        </div>
-        <p class="text-slate-400 mt-2">Media streaming</p>
-        <span class="text-yellow-400 mt-4 inline-block status-badge">● LAN only</span>
-        <p class="text-slate-500 text-xs mt-3">Click for details</p>
-      </div>
 
+        </div>
+      </div>
     </main>
 
     <!-- Guides Section -->
-    <section class="p-6">
-      <h2 class="text-3xl font-bold mb-6 text-slate-100">📚 Guides & Resources</h2>
-      <div id="guidesList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Guides will be populated by JavaScript -->
+    <section class="flex justify-center">
+      <div class="max-w-6xl w-full p-6">
+        <h2 class="text-3xl font-bold mb-6 text-slate-100">📚 Guides & Resources</h2>
+        <div id="guidesList" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <!-- Guides will be populated by JavaScript -->
+        </div>
       </div>
     </section>
 

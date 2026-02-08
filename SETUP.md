@@ -136,12 +136,135 @@ Access from your local network at:
 - Check server is running (`npm start`)
 - Check browser console for errors (F12)
 
+## Exposing Jellyfin with Cloudflare Tunnel (Free!)
+
+### Why Cloudflare Tunnel?
+- ✅ **100% FREE** - No cost for tunneling
+- ✅ **No port forwarding** - No need to open router ports
+- ✅ **Hides your IP** - Your public IP stays private
+- ✅ **SSL included** - Free HTTPS certificate
+- ✅ **Easy setup** - Just install and run
+
+### Prerequisites
+1. Free Cloudflare account at https://cloudflare.com
+2. A domain name (can use a free one from Freenom, or buy cheap from Namecheap/Porkbun)
+3. Domain added to Cloudflare (use their nameservers)
+
+### Setup Steps
+
+**1. Install cloudflared on Your Jellyfin Server**
+
+Windows (PowerShell as Admin):
+```powershell
+# Download cloudflared
+Invoke-WebRequest -Uri "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe" -OutFile "$env:ProgramFiles\cloudflared.exe"
+
+# Verify installation
+& "$env:ProgramFiles\cloudflared.exe" --version
+```
+
+Linux:
+```bash
+curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+sudo dpkg -i cloudflared.deb
+```
+
+**2. Login to Cloudflare**
+```powershell
+cloudflared tunnel login
+```
+This opens a browser - select your domain.
+
+**3. Create a Tunnel**
+```powershell
+cloudflared tunnel create jellyfin
+```
+Save the tunnel ID that's displayed!
+
+**4. Create Configuration File**
+
+Create `config.yml` in:
+- Windows: `C:\Users\YourUsername\.cloudflared\config.yml`
+- Linux: `~/.cloudflared/config.yml`
+
+```yaml
+tunnel: YOUR-TUNNEL-ID-HERE
+credentials-file: C:\Users\YourUsername\.cloudflared\YOUR-TUNNEL-ID.json
+
+ingress:
+  - hostname: jellyfin.yourdomain.com
+    service: http://localhost:8096
+  - service: http_status:404
+```
+
+**5. Create DNS Record**
+```powershell
+cloudflared tunnel route dns jellyfin jellyfin.yourdomain.com
+```
+
+**6. Run the Tunnel**
+
+Test it:
+```powershell
+cloudflared tunnel run jellyfin
+```
+
+**7. Install as Windows Service (Persistent)**
+```powershell
+cloudflared service install
+cloudflared service start
+```
+
+Linux (systemd):
+```bash
+sudo cloudflared service install
+sudo systemctl start cloudflared
+sudo systemctl enable cloudflared
+```
+
+### Add to Your Dashboard
+
+In your `index.html` or wherever you have server cards, add a Jellyfin button:
+
+```html
+<div class="card jellyfin-card">
+  <img src="assets/icons/jellyfin.png" alt="Jellyfin">
+  <h2>Jellyfin Media Server</h2>
+  <button onclick="window.open('https://jellyfin.yourdomain.com', '_blank')">
+    Open Jellyfin
+  </button>
+</div>
+```
+
+### Cost Breakdown
+- Cloudflare Tunnel: **$0/month** ✅
+- Cloudflare account: **$0/month** ✅
+- SSL certificate: **$0/month** (included) ✅
+- Domain: **~$10/year** (or free from Freenom)
+
+### Troubleshooting
+
+**Tunnel won't start**
+- Check Jellyfin is running on port 8096
+- Verify config.yml paths are correct
+- Run `cloudflared tunnel info jellyfin` to check status
+
+**Can't access via domain**
+- Wait 2-5 minutes for DNS propagation
+- Check DNS with: `nslookup jellyfin.yourdomain.com`
+- Verify tunnel is running: `cloudflared tunnel list`
+
+**SSL errors**
+- Cloudflare handles SSL automatically
+- Make sure Jellyfin internal URL is `http://` not `https://`
+
 ## Next Steps
 
 1. Test locally: `npm start` → `http://localhost:3000`
 2. Push to GitHub
 3. Deploy backend (Render, Railway, or your own server)
 4. Update API URL if using cloud deployment
-5. Share the URL with your team!
+5. Set up Cloudflare Tunnel for Jellyfin (optional)
+6. Share the URL with your team!
 
 Questions? Check README.md or contact your administrator.

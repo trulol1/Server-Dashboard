@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slyphie's Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0e27;
+      color: #e0e0e0;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* PS3-inspired animated background */
+    .background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0a0e27 100%);
+      z-index: -2;
+      overflow: hidden;
+    }
+
+    .blob {
+      position: absolute;
+      background: radial-gradient(circle at 30% 30%, rgba(100, 150, 255, 0.15), transparent 70%);
+      border-radius: 50%;
+      filter: blur(40px);
+      opacity: 0.6;
+    }
+
+    .blob-1 {
+      width: 300px;
+      height: 300px;
+      top: -10%;
+      left: -5%;
+      animation: float1 20s ease-in-out infinite;
+    }
+
+    .blob-2 {
+      width: 400px;
+      height: 400px;
+      bottom: -10%;
+      right: -5%;
+      animation: float2 25s ease-in-out infinite;
+    }
+
+    .blob-3 {
+      width: 250px;
+      height: 250px;
+      top: 50%;
+      right: 10%;
+      animation: float3 30s ease-in-out infinite;
+    }
+
+    @keyframes float1 {
+      0%, 100% { transform: translateY(0px) translateX(0px); }
+      50% { transform: translateY(-50px) translateX(30px); }
+    }
+
+    @keyframes float2 {
+      0%, 100% { transform: translateY(0px) translateX(0px); }
+      50% { transform: translateY(40px) translateX(-40px); }
+    }
+
+    @keyframes float3 {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-30px) rotate(10deg); }
+    }
+
+    /* Header */
+    header {
+      position: relative;
+      z-index: 1;
+      padding: 60px 20px;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    header h1 {
+      font-size: 3.5em;
+      font-weight: 300;
+      letter-spacing: 3px;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #6496ff, #64b5ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    header p {
+      font-size: 1.2em;
+      color: #8899cc;
+      font-weight: 300;
+      letter-spacing: 1px;
+    }
+
+    /* Main container */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px 80px;
+    }
+
+    /* Services grid */
+    .services {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-bottom: 60px;
+    }
+
+    .service-card {
+      position: relative;
+      padding: 40px 30px;
+      background: rgba(20, 25, 45, 0.7);
+      border: 1px solid rgba(100, 150, 255, 0.2);
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+      transition: all 0.4s ease;
+      overflow: hidden;
+    }
+
+    .service-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(100, 150, 255, 0.2), transparent);
+      transition: left 0.6s ease;
+    }
+
+    .service-card:hover::before {
+      left: 100%;
+    }
+
+    .service-card:hover {
+      border-color: rgba(100, 150, 255, 0.5);
+      background: rgba(30, 40, 70, 0.8);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 40px rgba(100, 150, 255, 0.15);
+    }
+
+    .service-icon {
+      font-size: 2.5em;
+      margin-bottom: 15px;
+      display: block;
+    }
+
+    .service-card h2 {
+      font-size: 1.8em;
+      margin-bottom: 12px;
+      font-weight: 300;
+      letter-spacing: 1px;
+      color: #6496ff;
+    }
+
+    .service-card p {
+      font-size: 0.95em;
+      color: #99aabb;
+      margin-bottom: 25px;
+      line-height: 1.6;
+      font-weight: 300;
+    }
+
+    .service-card a {
+      display: inline-block;
+      padding: 12px 28px;
+      background: linear-gradient(135deg, #6496ff, #64b5ff);
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+      font-weight: 300;
+      letter-spacing: 1px;
+      font-size: 0.9em;
+      border: 1px solid transparent;
+    }
+
+    .service-card a:hover {
+      background: linear-gradient(135deg, #5080dd, #5099dd);
+      transform: translateX(5px);
+      box-shadow: 0 5px 20px rgba(100, 150, 255, 0.3);
+    }
+
+    .service-card a.coming-soon {
+      background: rgba(100, 150, 255, 0.2);
+      color: #8899cc;
+      cursor: not-allowed;
+    }
+
+    .service-card a.coming-soon:hover {
+      background: rgba(100, 150, 255, 0.2);
+      transform: none;
+    }
+
+    /* Footer */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 30px;
+      color: #555588;
+      font-size: 0.9em;
+      border-top: 1px solid rgba(100, 150, 255, 0.1);
+      margin-top: 40px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 2.5em;
+      }
+
+      .services {
+        grid-template-columns: 1fr;
+      }
+
+      .blob-1 {
+        width: 200px;
+        height: 200px;
+      }
+
+      .blob-2 {
+        width: 250px;
+        height: 250px;
+      }
+
+      .blob-3 {
+        width: 150px;
+        height: 150px;
+      }
+    }
+
+    /* Smooth scroll behavior */
+    html {
+      scroll-behavior: smooth;
+    }
+  </style>
+</head>
+<body>
+  <div class="background">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <header>
+    <h1>SLYPHIE'S HUB</h1>
+    <p>UNIFIED SERVER ACCESS</p>
+  </header>
+
+  <div class="container">
+    <div class="services">
+      <div class="service-card">
+        <span class="service-icon">📊</span>
+        <h2>Dashboard</h2>
+        <p>Server management and monitoring. View system stats, manage services, and control your infrastructure in real-time.</p>
+        <a href="/dashboard">Access</a>
+      </div>
+
+      <div class="service-card">
+        <span class="service-icon">🎬</span>
+        <h2>Jellyfin</h2>
+        <p>Your personal media streaming server. Stream movies, shows, and music from anywhere without limits.</p>
+        <a href="https://jellyfin.slyphie.me" target="_blank">Watch Media</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 Slyphie's Hub | All services secured and private</p>
+  </footer>
+
+  <script>
+    // Scroll-based blob animation
+    document.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const blob1 = document.querySelector('.blob-1');
+      const blob2 = document.querySelector('.blob-2');
+      const blob3 = document.querySelector('.blob-3');
+
+      blob1.style.transform = `translateY(${scrollY * 0.3}px) translateX(${Math.sin(scrollY * 0.01) * 20}px)`;
+      blob2.style.transform = `translateY(${-scrollY * 0.2}px) translateX(${Math.cos(scrollY * 0.01) * 20}px)`;
+      blob3.style.transform = `translateY(${scrollY * 0.15}px) rotate(${scrollY * 0.1}deg)`;
+    });
+
+    // Smooth card appearance on scroll
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.service-card').forEach(card => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      observer.observe(card);
+    });
+  </script>
+</body>
+</html>

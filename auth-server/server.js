@@ -209,13 +209,22 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'Server is running' });
 });
 
-// Serve static files from parent directory (dashboard root)
-app.use(express.static(path.join(__dirname, '..')));
-
-// Serve index.html for root path
+// Serve landing.html for root path (BEFORE static files middleware)
 app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'landing.html'));
+});
+
+// Protected dashboard route - requires authentication
+app.get('/dashboard', (req, res) => {
+  const token = req.query.token || req.headers['authorization']?.split(' ')[1];
+  
+  // If no token, return a page that prompts login (the index.html has the auth modal)
+  // The index.html will show the auth modal since token isn't in localStorage yet
   res.sendFile(path.join(__dirname, '..', 'index.html'));
 });
+
+// Serve static files from parent directory (dashboard root)
+app.use(express.static(path.join(__dirname, '..')));
 
 // Start server
 app.listen(PORT, () => {
