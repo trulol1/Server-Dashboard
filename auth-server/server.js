@@ -209,9 +209,14 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'Server is running' });
 });
 
-// Serve landing.html for root path (BEFORE static files middleware)
-app.get('/', (req, res) => {
+// Serve landing.html for /landing (BEFORE static files middleware)
+app.get('/landing', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'landing.html'));
+});
+
+// Redirect root to landing
+app.get('/', (req, res) => {
+  res.redirect('/landing');
 });
 
 // Protected dashboard route - requires authentication
