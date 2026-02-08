@@ -1,9 +1,0 @@
-{
-  "name": "serverindex-root",
-  "private": true,
-  "version": "1.0.0",
-  "scripts": {
-    "prestart": "npm --prefix auth-server install",
-    "start": "node auth-server/server.js"
-  }
-}

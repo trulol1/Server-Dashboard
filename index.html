@@ -1,513 +1,328 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Local Server Index</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="styles.css" />
-</head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slyphie's Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-<body class="bg-slate-900 text-slate-100 min-h-screen overflow-hidden auth-active">
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0a0e27;
+      color: #e0e0e0;
+      overflow-x: hidden;
+      position: relative;
+    }
 
-  <!-- Authentication Modal -->
-  <div id="authModal" class="fixed inset-0 flex items-center justify-center backdrop-blur-sm animate-fadeIn z-50 w-screen h-screen">
-    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-image: url('assets/backgrounds/lock-screen/lock-screen-background.gif'); background-size: 100% 100%; background-repeat: no-repeat; background-attachment: fixed; background-position: top center; z-index: -2;"></div>
-    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); z-index: -1;"></div>
-    <div class="bg-slate-800 rounded-2xl shadow-2xl p-8 w-96 animate-slideUp relative z-10">
-      <div class="text-center mb-8">
-        <div class="mb-4 animate-bounce flex justify-center">
-          <img src="assets/icons/lock-screen-icon.png" alt="Dashboard" class="w-20 h-20">
-        </div>
-        <h2 class="text-3xl font-bold text-slate-100">Dashboard Access</h2>
-        <p class="text-slate-400 mt-2">Enter your TOTP code</p>
-      </div>
+    /* PS3-inspired animated background */
+    .background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0a0e27 100%);
+      z-index: -2;
+      overflow: hidden;
+    }
 
-      <!-- Login Form -->
-      <form id="authForm" class="space-y-4">
-        <div>
-          <input 
-            type="text" 
-            id="totpInput" 
-            placeholder="000000" 
-            maxlength="6"
-            inputmode="numeric"
-            pattern="[0-9]{6}"
-            class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 text-center text-2xl letter-spacing-1"
-            required
-          />
-        </div>
-        <button 
-          type="submit" 
-          class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/50 active:scale-95"
-        >
-          Unlock Dashboard
-        </button>
-      </form>
+    .blob {
+      position: absolute;
+      background: radial-gradient(circle at 30% 30%, rgba(100, 150, 255, 0.15), transparent 70%);
+      border-radius: 50%;
+      filter: blur(40px);
+      opacity: 0.6;
+    }
 
-      <div class="mt-6 text-center text-slate-500 text-sm">
-        <p>Using <span class="text-slate-400 font-mono">Google Authenticator</span> or similar app</p>
-        <button onclick="window.location.href='/'" type="button" class="mt-4 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all duration-300 text-sm text-slate-100">
-          ← Back to Home
-        </button>
-        <button id="showSetupBtn" type="button" class="mt-3 text-blue-400 hover:text-blue-300 underline text-xs">
-          Don't have it set up?
-        </button>
-      </div>
+    .blob-1 {
+      width: 300px;
+      height: 300px;
+      top: -10%;
+      left: -5%;
+      animation: float1 20s ease-in-out infinite;
+    }
 
-      <div class="mt-4 text-center">
-        <input id="adminCodeInput" type="text" placeholder="Enter code for admin..." class="px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm text-center" maxlength="3">
-        <p class="text-xs text-slate-500 mt-2">Type TRU to access admin login</p>
-      </div>
+    .blob-2 {
+      width: 400px;
+      height: 400px;
+      bottom: -10%;
+      right: -5%;
+      animation: float2 25s ease-in-out infinite;
+    }
 
-      <!-- Setup QR Code (Hidden by default) -->
-      <div id="setupPanel" class="hidden mt-6 text-center">
-        <h3 class="text-lg font-bold mb-4">First-time Setup</h3>
-        <div id="qrCodeContainer" class="bg-white p-4 rounded-lg mb-4">
-          <!-- QR code will be displayed here -->
-        </div>
-        <p class="text-slate-400 text-sm mb-4">Scan with Google Authenticator, Microsoft Authenticator, or Authy</p>
-        <button id="hideSetupBtn" type="button" class="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg">
-          Done - Ready to Login
-        </button>
-      </div>
-    </div>
-  </div>
+    .blob-3 {
+      width: 250px;
+      height: 250px;
+      top: 50%;
+      right: 10%;
+      animation: float3 30s ease-in-out infinite;
+    }
 
-  <!-- Main Dashboard (Hidden until authenticated) -->
-  <div id="dashboard" class="hidden">
-    <header class="mb-8 animate-slideDown px-6">
-      <div class="flex items-center justify-between flex-wrap gap-4">
-        <div class="flex items-center gap-4">
-          <div class="w-16 h-16 rounded-full overflow-hidden flex-shrink-0">
-            <img src="assets/icons/home-dashboard-icon.png" alt="Dashboard" class="w-full h-full">
-          </div>
-          <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Home Lab Dashboard</h1>
-        </div>
-        <div class="flex gap-2">
-          <button onclick="window.location.href='/'" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all duration-300 text-sm">← Back to Home</button>
-          <button id="logoutBtn" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all duration-300 text-sm">Logout</button>
-        </div>
-      </div>
-      <p class="text-slate-500 mt-4 text-sm"><span id="dateTime"></span></p>
-    </header>
+    @keyframes float1 {
+      0%, 100% { transform: translateY(0px) translateX(0px); }
+      50% { transform: translateY(-50px) translateX(30px); }
+    }
 
-    <main class="flex justify-center">
-      <div class="w-full max-w-6xl">
-        <h2 class="text-3xl font-bold mb-6 text-slate-100 px-6">🎮 Servers</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 p-6 place-items-center">
+    @keyframes float2 {
+      0%, 100% { transform: translateY(0px) translateX(0px); }
+      50% { transform: translateY(40px) translateX(-40px); }
+    }
 
-          <!-- Service Card - Game Servers -->
-          <div class="service-card rounded-xl bg-slate-800 hover:bg-slate-700 hover:shadow-xl p-5 shadow-lg cursor-pointer w-full" data-server="minecraft">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-xl font-semibold">Game Servers</h3>
-              <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                <img src="assets/icons/minecraft-server-icon.gif" alt="Game Servers" class="w-full h-full">
-              </div>
-            </div>
-            <p class="text-slate-400 mt-2">Browse and manage game servers</p>
-            <span class="text-green-400 mt-4 inline-block status-badge">● Online</span>
-            <p class="text-slate-500 text-xs mt-3">Click for details</p>
-          </div>
+    @keyframes float3 {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-30px) rotate(10deg); }
+    }
 
-          <!-- Anime Card -->
-          <div class="guide-card rounded-xl bg-slate-800 hover:bg-slate-700 hover:shadow-xl p-5 shadow-lg cursor-pointer w-full" onclick="window.open('anime.html', '_self')">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-xl font-semibold">Anime</h3>
-              <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                <img src="assets/icons/anime-icon.png" alt="Anime" class="w-full h-full" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%236366f1%22%3E%3Ctext x=%2212%22 y=%2220%22 font-size=%2224%22 text-anchor=%22middle%22%3E🎌%3C/text%3E%3C/svg%3E'">
-              </div>
-            </div>
-            <p class="text-slate-400 mt-2">Top rated anime and search powered by MyAnimeList data</p>
-            <span class="text-blue-400 mt-4 inline-block status-badge">● Available</span>
-            <p class="text-slate-500 text-xs mt-3">Click to browse</p>
-          </div>
+    /* Header */
+    header {
+      position: relative;
+      z-index: 1;
+      padding: 60px 20px;
+      text-align: center;
+      margin-bottom: 40px;
+    }
 
-        </div>
-      </div>
-    </main>
+    header h1 {
+      font-size: 3.5em;
+      font-weight: 300;
+      letter-spacing: 3px;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #6496ff, #64b5ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
-    <!-- Guides Section -->
-    <section class="flex justify-center">
-      <div class="max-w-6xl w-full p-6">
-        <h2 class="text-3xl font-bold mb-6 text-slate-100">📚 Guides & Resources</h2>
-        <div id="guidesList" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <!-- Guides will be populated by JavaScript -->
-        </div>
-      </div>
-    </section>
+    header p {
+      font-size: 1.2em;
+      color: #8899cc;
+      font-weight: 300;
+      letter-spacing: 1px;
+    }
 
-    <!-- Server Details Modal -->
-    <div id="detailsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-sm z-50 animate-fadeIn">
-      <div class="bg-slate-800 rounded-2xl shadow-2xl p-8 w-full max-w-md animate-slideUp">
-        <div class="flex items-center justify-between mb-6">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-              <img id="modalIcon" src="assets/icons/minecraft-server-icon.gif" alt="Server" class="w-full h-full">
-            </div>
-            <h2 id="modalTitle" class="text-2xl font-bold">Server Details</h2>
-          </div>
-          <button id="closeModal" class="text-slate-400 hover:text-slate-100 text-2xl transition-colors">✕</button>
-        </div>
+    /* Main container */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px 80px;
+    }
 
-        <div id="detailsContent" class="space-y-4">
-          <!-- Details will be populated by JavaScript -->
-        </div>
+    /* Services grid */
+    .services {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-bottom: 60px;
+    }
 
-        <!-- Admin Edit Controls -->
-        <div id="adminEditControls" class="hidden mt-6 pt-6 border-t border-slate-700 space-y-3">
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs text-slate-400 mb-1">IP Address</label>
-              <input id="editServerIP" type="text" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500">
-            </div>
-            <div>
-              <label class="block text-xs text-slate-400 mb-1">Port</label>
-              <input id="editServerPort" type="text" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500">
-            </div>
-          </div>
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">Description</label>
-            <input id="editServerDescription" type="text" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500">
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs text-slate-400 mb-1">Version</label>
-              <input id="editServerVersion" type="text" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500">
-            </div>
-            <div>
-              <label class="block text-xs text-slate-400 mb-1">Max Players</label>
-              <input id="editServerMaxPlayers" type="text" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500">
-            </div>
-          </div>
-          <div class="flex gap-2">
-            <button id="saveServerEditBtn" class="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded transition-all duration-300 active:scale-95">
-              Save Changes
-            </button>
-            <button id="cancelServerEditBtn" class="flex-1 px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold rounded transition-all duration-300 active:scale-95">
-              Cancel
-            </button>
-          </div>
-        </div>
+    .service-card {
+      position: relative;
+      padding: 40px 30px;
+      background: rgba(20, 25, 45, 0.7);
+      border: 1px solid rgba(100, 150, 255, 0.2);
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+      transition: all 0.4s ease;
+      overflow: hidden;
+    }
 
-        <div class="flex gap-3 mt-8">
-          <button id="visitBtn" class="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/50 active:scale-95">
-            Visit Server
-          </button>
-          <button id="copyIPBtn" class="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-all duration-300 active:scale-95">
-            Copy IP
-          </button>
-          <button id="editServerBtn" class="hidden flex-1 px-4 py-3 bg-yellow-600 hover:bg-yellow-700 text-white font-semibold rounded-lg transition-all duration-300 active:scale-95">
-            Edit (Admin)
-          </button>
-        </div>
-      </div>
-    </div>
+    .service-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(100, 150, 255, 0.2), transparent);
+      transition: left 0.6s ease;
+    }
 
-    <!-- Clicker Game Modal -->
-    <div id="clickerModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-sm z-40 animate-fadeIn overflow-y-auto">
-      <div class="bg-slate-800 rounded-2xl shadow-2xl p-8 w-full max-w-6xl animate-slideUp my-8">
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <h2 class="text-2xl font-bold"><span id="stageName">Young Rudeus</span></h2>
-            <p class="text-slate-400 text-sm">Reincarnation Multiplier: <span id="prestigeMultiplier" class="text-purple-400 font-bold">1x</span></p>
-          </div>
-          <div class="flex items-center gap-2">
-            <button id="optionsBtn" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all duration-300 text-sm">Options</button>
-            <button id="debugMenuBtn" class="hidden px-3 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg transition-all duration-300 text-sm">🐛 Debug</button>
-            <button id="closeClickerModal" class="text-slate-400 hover:text-slate-100 text-2xl transition-colors">✕</button>
-          </div>
-        </div>
+    .service-card:hover::before {
+      left: 100%;
+    }
 
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 h-96 lg:h-full">
-          <!-- Left - Main Game -->
-          <div class="lg:col-span-2 flex flex-col items-center justify-center">
-            <div id="clickerScore" class="text-6xl font-bold mb-4 text-blue-400">0</div>
-            
-            <!-- Clicker Selection (hidden, replaced by upgrade buttons) -->
-            <div class="flex gap-3 mb-4 hidden">
-              <button id="clicker0Btn" class="w-16 h-16 rounded-lg border-2 border-blue-500 bg-blue-600 hover:bg-blue-700 transition-all" title="Rudeus">
-                <img src="assets/game-assets/young-rudeus/Rudeus-clicker-1.png" alt="Rudeus" class="w-full h-full object-cover rounded-lg">
-              </button>
-              <button id="clicker1Btn" class="w-16 h-16 rounded-lg border-2 border-slate-600 bg-slate-700 hover:bg-slate-600 transition-all" title="Roxy">
-                <img src="assets/game-assets/young-rudeus/Roxy-clicker-2.png" alt="Roxy" class="w-full h-full object-cover rounded-lg">
-              </button>
-              <button id="clicker2Btn" class="w-16 h-16 rounded-lg border-2 border-slate-600 bg-slate-700 hover:bg-slate-600 transition-all" title="Sylphy">
-                <img src="assets/game-assets/young-rudeus/Sylphy-clicker-3.png" alt="Sylphy" class="w-full h-full object-cover rounded-lg">
-              </button>
-            </div>
-            
-            <button id="clickerButton" class="w-48 h-48 mb-4 bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-lg shadow-lg transition-all duration-200 active:scale-95 flex items-center justify-center">
-              <img id="clickerAsset" src="assets/game-assets/young-rudeus/Rudeus-clicker-1.png" alt="Clicker" class="w-40 h-40 object-cover">
-            </button>
-            <div class="text-center">
-              <p class="text-slate-400 mb-2">Click Power: <span id="clickPower" class="text-green-400 font-bold">1</span></p>
-              <p class="text-slate-400">CPS: <span id="cpsDisplay" class="text-yellow-400 font-bold">0</span></p>
-            </div>
-          </div>
+    .service-card:hover {
+      border-color: rgba(100, 150, 255, 0.5);
+      background: rgba(30, 40, 70, 0.8);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 40px rgba(100, 150, 255, 0.15);
+    }
 
-          <!-- Right - Boss -->
-          <div class="lg:col-span-1 bg-slate-700 rounded-lg p-4 flex flex-col">
-            <h3 class="text-lg font-bold mb-2 text-red-400">⚔️ <span id="bossName">Paul</span></h3>
-            <div class="flex justify-center mb-4 h-24">
-              <img id="bossAsset" src="assets/game-assets/young-rudeus/paul-boss-1.png" alt="Boss" class="h-full object-contain" style="filter: brightness(0);">
-            </div>
-            <div class="text-center mb-4">
-              <div id="bossHealth" class="text-3xl font-bold text-red-500">100,000,000</div>
-              <div class="w-full bg-slate-600 rounded-full h-4 mt-2">
-                <div id="bossHealthBar" class="bg-red-500 h-4 rounded-full transition-all" style="width: 100%"></div>
-              </div>
-            </div>
-            <button id="bossAttackBtn" class="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded transition-all active:scale-95 mb-3">
-              Attack
-            </button>
-            <button id="prestigeBtn" class="w-full px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded transition-all active:scale-95">
-              Reincarnate (2x)
-            </button>
-          </div>
+    .service-icon {
+      font-size: 2.5em;
+      margin-bottom: 15px;
+      display: block;
+    }
 
-          <!-- Bottom - Upgrades -->
-          <div class="lg:col-span-3">
-            <h3 class="text-lg font-bold mb-3 text-slate-100">Click Power Upgrades</h3>
-            <div class="grid grid-cols-3 gap-3 mb-6">
-              <button id="upgradeClickPower0" class="p-3 rounded-lg text-left transition-all bg-green-600 hover:bg-green-700 flex gap-3 items-start">
-                <img src="assets/game-assets/young-rudeus/Rudeus-clicker-1.png" alt="Rudeus" class="w-16 h-16 object-cover rounded">
-                <div class="flex-1">
-                  <div class="text-xs mb-1">🧙 Rudeus</div>
-                  <div class="font-semibold text-sm">Click Power</div>
-                  <div class="text-xs opacity-75">Level: <span id="clickPowerLevel0">1</span>/50</div>
-                  <div class="text-sm font-bold">Cost: <span id="clickPowerCost0">10</span></div>
-                </div>
-              </button>
-              <button id="upgradeClickPower1" class="p-3 rounded-lg text-left transition-all bg-slate-700 cursor-not-allowed opacity-50 flex gap-3 items-start">
-                <img src="assets/game-assets/young-rudeus/Roxy-clicker-2.png" alt="Roxy" class="w-16 h-16 object-cover rounded">
-                <div class="flex-1">
-                  <div class="text-xs mb-1">📚 Roxy</div>
-                  <div class="font-semibold text-sm">Click Power</div>
-                  <div class="text-xs opacity-75">Level: <span id="clickPowerLevel1">1</span>/50</div>
-                  <div class="text-sm font-bold">Cost: <span id="clickPowerCost1">500</span></div>
-                </div>
-              </button>
-              <button id="upgradeClickPower2" class="p-3 rounded-lg text-left transition-all bg-slate-700 cursor-not-allowed opacity-50 flex gap-3 items-start">
-                <img src="assets/game-assets/young-rudeus/Sylphy-clicker-3.png" alt="Sylphy" class="w-16 h-16 object-cover rounded">
-                <div class="flex-1">
-                  <div class="text-xs mb-1">👑 Sylphy</div>
-                  <div class="font-semibold text-sm">Click Power</div>
-                  <div class="text-xs opacity-75">Level: <span id="clickPowerLevel2">1</span>/50</div>
-                  <div class="text-sm font-bold">Cost: <span id="clickPowerCost2">1000</span></div>
-                </div>
-              </button>
-            </div>
+    .service-card h2 {
+      font-size: 1.8em;
+      margin-bottom: 12px;
+      font-weight: 300;
+      letter-spacing: 1px;
+      color: #6496ff;
+    }
 
-            <h3 class="text-lg font-bold mb-3 text-slate-100">Auto Clicker Upgrades</h3>
-            <div class="grid grid-cols-2 gap-3">
-              <button id="upgradeAutoClick0" class="p-3 rounded-lg text-left transition-all bg-slate-700 cursor-not-allowed opacity-50 flex gap-3 items-start">
-                <img src="assets/game-assets/young-rudeus/Lilia-autoclicker-1.png" alt="Lilia" class="w-16 h-16 object-cover rounded">
-                <div class="flex-1">
-                  <div class="text-xs mb-1">💜 Lilia</div>
-                  <div class="font-semibold text-sm">Auto Clicker</div>
-                  <div class="text-xs opacity-75">Level: <span id="autoClickLevel0">0</span>/20</div>
-                  <div class="text-sm font-bold">Cost: <span id="autoClickCost0">2000</span></div>
-                </div>
-              </button>
-              <button id="upgradeAutoClick1" class="p-3 rounded-lg text-left transition-all bg-slate-700 cursor-not-allowed opacity-50 flex gap-3 items-start">
-                <img src="assets/game-assets/young-rudeus/Zenith-autoclicker-2.png" alt="Zenith" class="w-16 h-16 object-cover rounded">
-                <div class="flex-1">
-                  <div class="text-xs mb-1">🔮 Zenith</div>
-                  <div class="font-semibold text-sm">Auto Clicker</div>
-                  <div class="text-xs opacity-75">Level: <span id="autoClickLevel1">0</span>/20</div>
-                  <div class="text-sm font-bold">Cost: <span id="autoClickCost1">3000</span></div>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
+    .service-card p {
+      font-size: 0.95em;
+      color: #99aabb;
+      margin-bottom: 25px;
+      line-height: 1.6;
+      font-weight: 300;
+    }
 
-        <div class="flex gap-3 mt-6">
-          <button id="resetClickerBtn" class="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-all duration-300">
-            Reset
-          </button>
-        </div>
-      </div>
-    </div>
-            Copy IP
-          </button>
-        </div>
-      </div>
-    </div>
+    .service-card a {
+      display: inline-block;
+      padding: 12px 28px;
+      background: linear-gradient(135deg, #6496ff, #64b5ff);
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+      font-weight: 300;
+      letter-spacing: 1px;
+      font-size: 0.9em;
+      border: 1px solid transparent;
+    }
 
-    <!-- Admin Debug Login Modal (hidden by default) -->
-    <div id="adminModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center backdrop-blur-sm z-50 animate-fadeIn">
-      <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-8 w-full max-w-md animate-slideUp relative">
-        <button id="adminClose" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl">✕</button>
-        <div class="text-center mb-6">
-          <p class="text-xs uppercase tracking-[0.3em] text-amber-400">Debug Access</p>
-          <h2 class="text-2xl font-bold text-slate-100 mt-2">Admin Login</h2>
-          <p class="text-slate-400 text-sm mt-1">Press T + R + U to open</p>
-        </div>
-        <form id="adminLoginForm" class="space-y-4">
-          <div>
-            <label for="adminUsername" class="block text-slate-400 text-sm mb-1">Username</label>
-            <input id="adminUsername" name="adminUsername" type="text" class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-          </div>
-          <div>
-            <label for="adminPassword" class="block text-slate-400 text-sm mb-1">Password</label>
-            <input id="adminPassword" name="adminPassword" type="password" class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-          </div>
-          <p id="adminError" class="text-red-400 text-sm min-h-[20px]"></p>
-          <button type="submit" class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-300">Login as Admin</button>
-        </form>
-        <p class="text-xs text-slate-500 mt-4">Admin tokens unlock the dashboard without TOTP for debugging.</p>
-      </div>
-    </div>
+    .service-card a:hover {
+      background: linear-gradient(135deg, #5080dd, #5099dd);
+      transform: translateX(5px);
+      box-shadow: 0 5px 20px rgba(100, 150, 255, 0.3);
+    }
 
-    <!-- Admin Debug Menu Modal (hidden by default) -->
-    <div id="debugMenuModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center backdrop-blur-sm z-50 animate-fadeIn">
-      <div class="bg-slate-900 border border-yellow-500 rounded-2xl shadow-2xl p-8 w-full max-w-2xl animate-slideUp max-h-96 overflow-y-auto">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-bold text-yellow-400">🐛 Admin Debug Menu</h2>
-          <button id="debugClose" class="text-slate-400 hover:text-white text-xl">✕</button>
-        </div>
+    .service-card a.coming-soon {
+      background: rgba(100, 150, 255, 0.2);
+      color: #8899cc;
+      cursor: not-allowed;
+    }
 
-        <div class="space-y-4">
-          <div class="bg-slate-800 rounded-lg p-4">
-            <h3 class="text-lg font-bold text-slate-100 mb-3">Clicker Game Debug</h3>
-            <div class="grid grid-cols-2 gap-3">
-              <button id="debugResetClicker" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-white transition-all">Reset Game</button>
-              <button id="debugAddScore" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded text-white transition-all">Add 10k Score</button>
-              <button id="debugMaxAll" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white transition-all">Max All Upgrades</button>
-              <button id="debugPrestige" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded text-white transition-all">Force Reincarnation</button>
-            </div>
-          </div>
+    .service-card a.coming-soon:hover {
+      background: rgba(100, 150, 255, 0.2);
+      transform: none;
+    }
 
-          <div class="bg-slate-800 rounded-lg p-4">
-            <h3 class="text-lg font-bold text-slate-100 mb-3">Stage Controls</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
-              <div class="md:col-span-2">
-                <label for="debugStageSelect" class="block text-slate-400 text-sm mb-1">Select Stage</label>
-                <select id="debugStageSelect" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-slate-100 text-sm"></select>
-              </div>
-              <div>
-                <button id="debugStageApply" class="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded text-white transition-all">Switch Stage</button>
-              </div>
-            </div>
-          </div>
+    /* Footer */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 30px;
+      color: #555588;
+      font-size: 0.9em;
+      border-top: 1px solid rgba(100, 150, 255, 0.1);
+      margin-top: 40px;
+    }
 
-          <div class="bg-slate-800 rounded-lg p-4">
-            <h3 class="text-lg font-bold text-slate-100 mb-3">Game State</h3>
-            <div class="text-sm text-slate-300 space-y-2">
-              <p>Score: <span id="debugScore" class="font-mono font-bold">0</span></p>
-              <p>Click Power: <span id="debugClickPower" class="font-mono font-bold">1</span></p>
-              <p>Reincarnation Multiplier: <span id="debugPrestigeMultiplier" class="font-mono font-bold">1x</span></p>
-              <p>Rudeus Level: <span id="debugRudeusLevel" class="font-mono font-bold">1</span></p>
-              <p>Roxy Level: <span id="debugRoxyLevel" class="font-mono font-bold">1</span></p>
-              <p>Sylphy Level: <span id="debugSylphyLevel" class="font-mono font-bold">1</span></p>
-              <p>Lilia Auto Level: <span id="debugLiliaLevel" class="font-mono font-bold">0</span></p>
-              <p>Zenith Auto Level: <span id="debugZenithLevel" class="font-mono font-bold">0</span></p>
-            </div>
-          </div>
+    /* Responsive */
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 2.5em;
+      }
 
-          <div class="bg-slate-800 rounded-lg p-4">
-            <h3 class="text-lg font-bold text-slate-100 mb-3">Quick Actions</h3>
-            <div class="grid grid-cols-2 gap-3">
-              <button id="debugViewConsole" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-white transition-all">View Console</button>
-              <button id="debugExportState" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded text-white transition-all">Export State</button>
-            </div>
-          </div>
-        </div>
+      .services {
+        grid-template-columns: 1fr;
+      }
 
-        <button id="debugCloseBtn" class="w-full mt-6 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white transition-all">Close Debug Menu</button>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Options Modal -->
-  <div id="optionsModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center backdrop-blur-sm z-50 animate-fadeIn">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-8 w-full max-w-2xl animate-slideUp max-h-[80vh] overflow-y-auto">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold text-slate-100">Options</h2>
-        <button id="optionsClose" class="text-slate-400 hover:text-white text-xl">✕</button>
-      </div>
+      .blob-1 {
+        width: 200px;
+        height: 200px;
+      }
 
-      <div class="space-y-6">
-        <div class="bg-slate-800 rounded-lg p-4">
-          <h3 class="text-lg font-bold text-slate-100 mb-3">Save / Load</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-slate-400 text-sm mb-1">Save Code</label>
-              <textarea id="saveCodeOutput" class="w-full h-28 px-3 py-2 bg-slate-900 border border-slate-700 rounded text-slate-100 text-xs" readonly></textarea>
-              <div class="mt-2 flex gap-2">
-                <button id="generateSaveCodeBtn" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white text-sm">Generate Code</button>
-                <button id="copySaveCodeBtn" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-white text-sm">Copy</button>
-              </div>
-            </div>
-            <div>
-              <label class="block text-slate-400 text-sm mb-1">Load Code</label>
-              <textarea id="loadCodeInput" class="w-full h-28 px-3 py-2 bg-slate-900 border border-slate-700 rounded text-slate-100 text-xs" placeholder="Paste save code here..."></textarea>
-              <div class="mt-2 flex gap-2">
-                <button id="loadSaveCodeBtn" class="px-3 py-2 bg-green-600 hover:bg-green-700 rounded text-white text-sm">Load Code</button>
-              </div>
-              <p id="loadStatus" class="text-xs mt-2"></p>
-            </div>
-          </div>
-        </div>
+      .blob-2 {
+        width: 250px;
+        height: 250px;
+      }
 
-        <div class="bg-slate-800 rounded-lg p-4">
-          <h3 class="text-lg font-bold text-slate-100 mb-3">Preferences</h3>
-          <div class="space-y-3">
-            <label class="flex items-center gap-3 text-sm">
-              <input id="prefMuteMusic" type="checkbox" class="accent-blue-500">
-              <span>Mute music</span>
-            </label>
-            <label class="flex items-center gap-3 text-sm">
-              <input id="prefSkipReincarnation" type="checkbox" class="accent-blue-500">
-              <span>Skip reincarnation cutscene</span>
-            </label>
-            <label class="flex items-center gap-3 text-sm">
-              <input id="prefSkipAll" type="checkbox" class="accent-blue-500">
-              <span>Skip all other cutscenes</span>
-            </label>
-            <div class="pt-2">
-              <button id="testSoundBtn" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-white text-sm">Test Sound</button>
-              <span class="text-xs text-slate-500 ml-2">Plays a short beep (respects mute)</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-6 flex justify-end">
-        <button id="optionsCloseBtn" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white transition-all">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Cutscene Modal -->
-  <div id="cutsceneModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-[9999]">
-    <div class="w-full h-full flex flex-col items-center justify-center relative">
-      <video id="cutsceneVideo" class="w-full h-full object-contain" controls autoplay>
-        <source src="" type="video/mp4">
-        Your browser does not support the video tag.
-      </video>
-      <div class="absolute bottom-4 right-4 text-slate-400 text-sm pointer-events-none">
-        <p>Press ESC or click to skip</p>
-      </div>
-    </div>
-  </div>
-  
-  <meta name="auth-api-base" content="https://serverindex1.onrender.com/api" />
-
-  <script>
-    // Optional: set window.API_BASE_URL for production, or leave meta tag empty.
-    if (!window.API_BASE_URL) {
-      const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-      if (isLocal) {
-        window.API_BASE_URL = 'http://localhost:3000/api';
+      .blob-3 {
+        width: 150px;
+        height: 150px;
       }
     }
+
+    /* Smooth scroll behavior */
+    html {
+      scroll-behavior: smooth;
+    }
+  </style>
+</head>
+<body>
+  <div class="background">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <header>
+    <h1>SLYPHIE'S HUB</h1>
+    <p>UNIFIED SERVER ACCESS</p>
+  </header>
+
+  <div class="container">
+    <div class="services">
+      <div class="service-card">
+        <span class="service-icon">≡ƒôè</span>
+        <h2>Dashboard</h2>
+        <p>Server management and monitoring. View system stats, manage services, and control your infrastructure in real-time.</p>
+        <a href="/dashboard">Access</a>
+      </div>
+
+      <div class="service-card">
+        <span class="service-icon">≡ƒÄ¼</span>
+        <h2>Jellyfin</h2>
+        <p>Your personal media streaming server. Stream movies, shows, and music from anywhere without limits.</p>
+        <a href="https://jellyfin.slyphie.me" target="_blank">Watch Media</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>┬⌐ 2026 Slyphie's Hub | All services secured and private</p>
+  </footer>
+
+  <script>
+    // Scroll-based blob animation
+    document.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const blob1 = document.querySelector('.blob-1');
+      const blob2 = document.querySelector('.blob-2');
+      const blob3 = document.querySelector('.blob-3');
+
+      blob1.style.transform = `translateY(${scrollY * 0.3}px) translateX(${Math.sin(scrollY * 0.01) * 20}px)`;
+      blob2.style.transform = `translateY(${-scrollY * 0.2}px) translateX(${Math.cos(scrollY * 0.01) * 20}px)`;
+      blob3.style.transform = `translateY(${scrollY * 0.15}px) rotate(${scrollY * 0.1}deg)`;
+    });
+
+    // Smooth card appearance on scroll
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.service-card').forEach(card => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      observer.observe(card);
+    });
   </script>
-
-
-  <script src="auth-api.js"></script>
-  <script src="script.js"></script>
 </body>
 </html>
