@@ -45,10 +45,25 @@ app.use(cors({
       return callback(new Error('Not allowed by CORS'));
     }
   },
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// Message storage
+const messagesFile = path.join(__dirname, '.messages.json');
+let messages = [];
+if (fs.existsSync(messagesFile)) {
+  try {
+    messages = JSON.parse(fs.readFileSync(messagesFile, 'utf8'));
+  } catch (err) {
+    console.error('Failed to load messages:', err);
+    messages = [];
+  }
+}
+
+function saveMessages() {
+  fs.writeFileSync(messagesFile, JSON.stringify(messages, null, 2));
+}
 
 // Initialize or load TOTP secret
 let TOTP_SECRET = (process.env.TOTP_SECRET || '').trim();
@@ -198,6 +213,41 @@ app.get('/api/dashboard/data', verifyToken, (req, res) => {
 // Logout endpoint
 app.post('/api/auth/logout', verifyToken, (req, res) => {
   res.json({ success: true, message: 'Logged out successfully' });
+});
+
+// Message endpoints
+app.get('/api/messages', (req, res) => {
+  const now = Date.now();
+  const activeMessages = messages.filter(msg => !msg.expiresAt || msg.expiresAt > now);
+  res.json(activeMessages);
+});
+
+app.post('/api/messages', verifyToken, (req, res) => {
+  const { text, color, duration } = req.body;
+  
+  if (!text) {
+    return res.status(400).json({ error: 'Message text required' });
+  }
+
+  const message = {
+    id: Date.now().toString(),
+    text,
+    color: color || '#3b82f6',
+    duration: duration || 0,
+    createdAt: Date.now(),
+    expiresAt: duration > 0 ? Date.now() + (duration * 1000) : null
+  };
+
+  messages.push(message);
+  saveMessages();
+  res.json({ success: true, message });
+});
+
+app.delete('/api/messages/:id', verifyToken, (req, res) => {
+  const { id } = req.params;
+  messages = messages.filter(msg => msg.id !== id);
+  saveMessages();
+  res.json({ success: true });
 });
 
 // Health check

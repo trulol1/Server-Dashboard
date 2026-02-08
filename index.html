@@ -85,12 +85,16 @@
           <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Home Lab Dashboard</h1>
         </div>
         <div class="flex gap-2">
+          <button id="adminMessagesBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-all duration-300 text-sm hidden">📢 Post Message</button>
           <button onclick="window.location.href='/'" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all duration-300 text-sm">← Back to Home</button>
           <button id="logoutBtn" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all duration-300 text-sm">Logout</button>
         </div>
       </div>
       <p class="text-slate-500 mt-4 text-sm"><span id="dateTime"></span></p>
     </header>
+
+    <!-- Messages Section -->
+    <div id="messagesContainer" class="px-6 mb-6"></div>
 
     <main class="flex justify-center">
       <div class="w-full max-w-6xl">
@@ -493,6 +497,44 @@
       </div>
     </div>
   </div>
+
+  <!-- Admin Message Modal -->
+  <div id="messageModal" class="hidden fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-slate-800 rounded-2xl p-8 w-full max-w-md shadow-2xl">
+      <h2 class="text-2xl font-bold mb-6 text-slate-100">Post Dashboard Message</h2>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="block text-slate-300 mb-2">Message Text</label>
+          <textarea id="messageText" class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Enter your message..."></textarea>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 mb-2">Color</label>
+          <div class="grid grid-cols-4 gap-2">
+            <button class="color-btn w-full h-12 rounded-lg bg-blue-500 hover:ring-2 ring-white transition" data-color="#3b82f6"></button>
+            <button class="color-btn w-full h-12 rounded-lg bg-green-500 hover:ring-2 ring-white transition" data-color="#10b981"></button>
+            <button class="color-btn w-full h-12 rounded-lg bg-yellow-500 hover:ring-2 ring-white transition" data-color="#f59e0b"></button>
+            <button class="color-btn w-full h-12 rounded-lg bg-red-500 hover:ring-2 ring-white transition" data-color="#ef4444"></button>
+            <button class="color-btn w-full h-12 rounded-lg bg-purple-500 hover:ring-2 ring-white transition" data-color="#a855f7"></button>
+            <button class="color-btn w-full h-12 rounded-lg bg-pink-500 hover:ring-2 ring-white transition" data-color="#ec4899"></button>
+            <button class="color-btn w-full h-12 rounded-lg bg-indigo-500 hover:ring-2 ring-white transition" data-color="#6366f1"></button>
+            <button class="color-btn w-full h-12 rounded-lg bg-slate-500 hover:ring-2 ring-white transition" data-color="#64748b"></button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 mb-2">Duration (seconds, 0 = permanent)</label>
+          <input type="number" id="messageDuration" class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500" value="0" min="0" placeholder="0">
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-6">
+        <button id="postMessageBtn" class="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition">Post Message</button>
+        <button id="closeMessageModalBtn" class="px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition">Cancel</button>
+      </div>
+    </div>
+  </div>
   
   <meta name="auth-api-base" content="https://serverindex1.onrender.com/api" />
 
@@ -509,5 +551,6 @@
 
   <script src="auth-api.js"></script>
   <script src="script.js"></script>
+  <script src="message-system.js"></script>
 </body>
 </html>

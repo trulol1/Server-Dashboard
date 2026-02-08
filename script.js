@@ -24,6 +24,16 @@ const debugStageSelect = document.getElementById('debugStageSelect');
 const debugStageApply = document.getElementById('debugStageApply');
 const pressedKeys = new Set();
 
+// Message system elements
+const adminMessagesBtn = document.getElementById('adminMessagesBtn');
+const messageModal = document.getElementById('messageModal');
+const closeMessageModalBtn = document.getElementById('closeMessageModalBtn');
+const postMessageBtn = document.getElementById('postMessageBtn');
+const messageText = document.getElementById('messageText');
+const messageDuration = document.getElementById('messageDuration');
+const messagesContainer = document.getElementById('messagesContainer');
+let selectedColor = '#3b82f6';
+
 // Update date and time
 function updateDateTime() {
   const now = new Date();
@@ -779,6 +789,11 @@ function showDashboard() {
   document.body.classList.remove('auth-active');
 
   updateAdminUI();
+  
+  // Show admin messages button if authenticated
+  if (authAPI.isAuthenticated() && adminMessagesBtn) {
+    adminMessagesBtn.classList.remove('hidden');
+  }
   
   // Set random main dashboard background
   const randomBackground = getRandomMainDashboardBackground();
