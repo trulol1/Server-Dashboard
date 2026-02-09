@@ -116,17 +116,17 @@
             <p class="text-slate-500 text-xs mt-3">Click for details</p>
           </div>
 
-          <!-- Jellyfin Card -->
-          <div class="guide-card rounded-xl bg-slate-800 hover:bg-slate-700 hover:shadow-xl p-5 shadow-lg cursor-pointer w-full" onclick="document.getElementById('jellyfinModal').classList.remove('hidden')">
+          <!-- Suggestions Card -->
+          <div class="guide-card rounded-xl bg-slate-800 hover:bg-slate-700 hover:shadow-xl p-5 shadow-lg cursor-pointer w-full" onclick="document.getElementById('suggestionsModal').classList.remove('hidden')">
             <div class="flex items-center justify-between mb-4">
-              <h3 class="text-xl font-semibold">Jellyfin Server</h3>
+              <h3 class="text-xl font-semibold">Suggestions</h3>
               <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                <div class="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xl">🎬</div>
+                <div class="w-full h-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-xl">💡</div>
               </div>
             </div>
-            <p class="text-slate-400 mt-2">Media server and suggestions</p>
-            <span class="text-green-400 mt-4 inline-block status-badge">● Online</span>
-            <p class="text-slate-500 text-xs mt-3">Click for details & suggestions</p>
+            <p class="text-slate-400 mt-2">Submit and view community suggestions</p>
+            <span class="text-purple-400 mt-4 inline-block status-badge">● Active</span>
+            <p class="text-slate-500 text-xs mt-3">Click to see suggestions</p>
           </div>
 
           <!-- Anime Card -->
@@ -223,45 +223,24 @@
       </div>
     </div>
 
-    <!-- Jellyfin Server Modal -->
-    <div id="jellyfinModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-sm z-50 animate-fadeIn overflow-y-auto">
+    <!-- Suggestions Modal -->
+    <div id="suggestionsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-sm z-50 animate-fadeIn overflow-y-auto">
       <div class="bg-slate-800 rounded-2xl shadow-2xl p-8 w-full max-w-2xl animate-slideUp my-8">
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-3xl font-bold">🎬 Jellyfin Server</h2>
-          <button onclick="document.getElementById('jellyfinModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-100 text-2xl transition-colors">✕</button>
+          <h2 class="text-3xl font-bold">💡 Community Suggestions</h2>
+          <button onclick="document.getElementById('suggestionsModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-100 text-2xl transition-colors">✕</button>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <!-- Server Info -->
-          <div class="bg-slate-700 rounded-lg p-6">
-            <h3 class="text-xl font-semibold mb-4">Server Information</h3>
-            <div class="space-y-3">
-              <div>
-                <p class="text-slate-400 text-sm">Status</p>
-                <p class="text-green-400 font-semibold">● Online</p>
-              </div>
-              <div>
-                <p class="text-slate-400 text-sm">Type</p>
-                <p class="text-slate-100 font-semibold">Media Server</p>
-              </div>
-              <button onclick="window.open('http://192.168.1.50:8096', '_blank')" class="w-full mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-300 active:scale-95">
-                Visit Jellyfin
-              </button>
+        <!-- Stats -->
+        <div class="bg-slate-700 rounded-lg p-4 mb-6">
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="text-slate-400 text-sm">Total Suggestions</p>
+              <p id="suggestionCount" class="text-purple-400 font-semibold text-2xl">0</p>
             </div>
-          </div>
-
-          <!-- Suggestions Stats -->
-          <div class="bg-slate-700 rounded-lg p-6">
-            <h3 class="text-xl font-semibold mb-4">Suggestions</h3>
-            <div class="space-y-3">
-              <div>
-                <p class="text-slate-400 text-sm">Total Suggestions</p>
-                <p id="suggestionCount" class="text-blue-400 font-semibold text-2xl">0</p>
-              </div>
-              <button onclick="document.getElementById('suggestionForm').classList.remove('hidden')" class="w-full mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all duration-300 active:scale-95">
-                + Add Suggestion
-              </button>
-            </div>
+            <button onclick="document.getElementById('suggestionForm').classList.remove('hidden')" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-all duration-300 active:scale-95">
+              + Add Suggestion
+            </button>
           </div>
         </div>
 
@@ -271,14 +250,14 @@
           <div class="space-y-4">
             <div>
               <label class="block text-slate-300 mb-2">Your Name</label>
-              <input id="suggestionName" type="text" placeholder="Enter your name" class="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <input id="suggestionName" type="text" placeholder="Enter your name" class="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500">
             </div>
             <div>
               <label class="block text-slate-300 mb-2">Your Suggestion</label>
-              <textarea id="suggestionText" placeholder="What would you like to add to the Jellyfin server?" class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500" rows="4"></textarea>
+              <textarea id="suggestionText" placeholder="What would you like to suggest?" class="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500" rows="4"></textarea>
             </div>
             <div class="flex gap-3">
-              <button id="submitSuggestionBtn" class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all duration-300 active:scale-95">
+              <button id="submitSuggestionBtn" class="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-all duration-300 active:scale-95">
                 Submit Suggestion
               </button>
               <button onclick="document.getElementById('suggestionForm').classList.add('hidden')" class="flex-1 px-4 py-2 bg-slate-600 hover:bg-slate-500 text-white font-semibold rounded-lg transition-all duration-300 active:scale-95">
@@ -290,9 +269,9 @@
 
         <!-- Suggestions List -->
         <div>
-          <h3 class="text-lg font-semibold mb-4">Community Suggestions</h3>
+          <h3 class="text-lg font-semibold mb-4">All Suggestions</h3>
           <div id="suggestionsList" class="space-y-3 max-h-96 overflow-y-auto">
-            <p class="text-slate-400 text-center py-4">No suggestions yet. Be the first to suggest something!</p>
+            <p class="text-slate-400 text-center py-4">Loading suggestions...</p>
           </div>
         </div>
       </div>

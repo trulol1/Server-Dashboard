@@ -2041,17 +2041,19 @@ document.addEventListener('DOMContentLoaded', () => {
   loadJellyfinSuggestions();
 });
 
-// ==================== JELLYFIN SUGGESTIONS SYSTEM ====================
+// ==================== SUGGESTIONS SYSTEM ====================
 
-// Store suggestions in localStorage
-const JELLYFIN_STORAGE_KEY = 'jellyfinSuggestions';
-
-// Load suggestions from localStorage
-function loadJellyfinSuggestions() {
-  const stored = localStorage.getItem(JELLYFIN_STORAGE_KEY);
-  const suggestions = stored ? JSON.parse(stored) : [];
-  displayJellyfinSuggestions(suggestions);
-  updateSuggestionCount(suggestions.length);
+// Load suggestions from Discord
+async function loadJellyfinSuggestions() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/suggestions`);
+    const suggestions = await response.json();
+    displayJellyfinSuggestions(suggestions);
+    updateSuggestionCount(suggestions.length);
+  } catch (error) {
+    console.error('Failed to load suggestions:', error);
+    displayJellyfinSuggestions([]);
+  }
 }
 
 // Display suggestions
@@ -2065,14 +2067,14 @@ function displayJellyfinSuggestions(suggestions) {
   }
   
   suggestionsList.innerHTML = suggestions.map((suggestion, index) => `
-    <div class="bg-slate-700 rounded-lg p-4 border-l-4 border-blue-500">
+    <div class="bg-slate-700 rounded-lg p-4 border-l-4 border-purple-500">
       <div class="flex items-start justify-between mb-2">
         <div>
           <p class="font-semibold text-slate-100">${escapeHtml(suggestion.name)}</p>
           <p class="text-xs text-slate-400">${new Date(suggestion.timestamp).toLocaleDateString()}</p>
         </div>
         ${typeof authAPI !== 'undefined' && authAPI.isUserAdmin() ? `
-          <button onclick="deleteJellyfinSuggestion(${index})" class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-white text-xs transition">
+          <button onclick="deleteSuggestionFromDiscord('${suggestion.id}')" class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-white text-xs transition">
             Delete
           </button>
         ` : ''}
@@ -2088,7 +2090,7 @@ function updateSuggestionCount(count) {
   if (countEl) countEl.textContent = count;
 }
 
-// Add new suggestion (sends to Discord via backend + localStorage)
+// Add new suggestion (sends to Discord via backend)
 function submitJellyfinSuggestion() {
   const nameInput = document.getElementById('suggestionName');
   const textInput = document.getElementById('suggestionText');
@@ -2106,21 +2108,6 @@ function submitJellyfinSuggestion() {
     return;
   }
   
-  // Get existing suggestions
-  const stored = localStorage.getItem(JELLYFIN_STORAGE_KEY);
-  const suggestions = stored ? JSON.parse(stored) : [];
-  
-  // Create suggestion object
-  const newSuggestion = {
-    name,
-    text,
-    timestamp: new Date().toISOString()
-  };
-  
-  // Add to local storage
-  suggestions.push(newSuggestion);
-  localStorage.setItem(JELLYFIN_STORAGE_KEY, JSON.stringify(suggestions));
-  
   // Send to Discord via backend
   sendSuggestionToDiscord(name, text);
   
@@ -2128,15 +2115,12 @@ function submitJellyfinSuggestion() {
   nameInput.value = '';
   textInput.value = '';
   document.getElementById('suggestionForm').classList.add('hidden');
-  
-  // Reload display
-  loadJellyfinSuggestions();
 }
 
 // Send suggestion to Discord via backend webhook
 async function sendSuggestionToDiscord(name, text) {
   try {
-    const response = await fetch(`${API_BASE_URL}/jellyfin/suggestion`, {
+    const response = await fetch(`${API_BASE_URL}/suggestions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -2147,28 +2131,30 @@ async function sendSuggestionToDiscord(name, text) {
       })
     });
     
-    if (!response.ok) {
-      console.error('Failed to send suggestion to Discord:', response.status);
-    } else {
+    if (response.ok) {
       console.log('Suggestion sent to Discord successfully');
+      setTimeout(() => loadJellyfinSuggestions(), 1000); // Refresh after 1 second
+    } else {
+      alert('Failed to post suggestion');
     }
   } catch (error) {
     console.error('Error sending suggestion to Discord:', error);
-    // Still keep it in localStorage even if Discord fails
+    alert('Failed to post suggestion');
   }
 }
 
-// Delete suggestion (admin only)
-function deleteJellyfinSuggestion(index) {
+// Delete suggestion from Discord (admin only)
+async function deleteSuggestionFromDiscord(messageId) {
   if (!confirm('Are you sure you want to delete this suggestion?')) return;
   
-  const stored = localStorage.getItem(JELLYFIN_STORAGE_KEY);
-  const suggestions = stored ? JSON.parse(stored) : [];
-  
-  suggestions.splice(index, 1);
-  localStorage.setItem(JELLYFIN_STORAGE_KEY, JSON.stringify(suggestions));
-  
-  loadJellyfinSuggestions();
+  try {
+    // Since Discord doesn't allow deleting via webhook, we'd need bot token
+    // For now, just refresh the list
+    alert('Admin deletion requires Discord bot setup');
+    loadJellyfinSuggestions();
+  } catch (error) {
+    console.error('Error deleting suggestion:', error);
+  }
 }
 
 // Helper function to escape HTML

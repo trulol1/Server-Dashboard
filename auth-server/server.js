@@ -260,8 +260,8 @@ app.delete('/api/messages/:id', verifyToken, requireAdmin, (req, res) => {
   res.json({ success: true });
 });
 
-// Discord Webhook Endpoint for Jellyfin Suggestions
-app.post('/api/jellyfin/suggestion', async (req, res) => {
+// Discord Webhook Endpoint for Suggestions
+app.post('/api/suggestions', async (req, res) => {
   const { name, text } = req.body;
   const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
   
@@ -275,15 +275,15 @@ app.post('/api/jellyfin/suggestion', async (req, res) => {
   
   try {
     const embed = {
-      title: '🎬 New Jellyfin Suggestion',
+      title: '💡 New Suggestion',
       description: text,
-      color: 3447003,
+      color: 10813440,
       author: {
         name: name
       },
       timestamp: new Date().toISOString(),
       footer: {
-        text: 'Jellyfin Server Suggestions'
+        text: 'Community Suggestions'
       }
     };
     
@@ -306,6 +306,51 @@ app.post('/api/jellyfin/suggestion', async (req, res) => {
   } catch (error) {
     console.error('Error posting to Discord:', error);
     res.status(500).json({ error: 'Failed to post suggestion' });
+  }
+});
+
+// Get suggestions from Discord channel
+app.get('/api/suggestions', async (req, res) => {
+  const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
+  const CHANNEL_ID = process.env.DISCORD_SUGGESTIONS_CHANNEL_ID;
+  
+  if (!BOT_TOKEN || !CHANNEL_ID) {
+    return res.status(500).json({ error: 'Discord bot not configured' });
+  }
+  
+  try {
+    const response = await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages?limit=50`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bot ${BOT_TOKEN}`
+      }
+    });
+    
+    if (!response.ok) {
+      console.error('Discord API error:', response.status);
+      return res.status(500).json({ error: 'Failed to fetch suggestions' });
+    }
+    
+    const messages = await response.json();
+    
+    // Parse messages with embeds (our suggestion format)
+    const suggestions = messages
+      .filter(msg => msg.embeds && msg.embeds.length > 0)
+      .map(msg => {
+        const embed = msg.embeds[0];
+        return {
+          id: msg.id,
+          name: embed.author?.name || 'Anonymous',
+          text: embed.description || '',
+          timestamp: msg.timestamp
+        };
+      })
+      .reverse(); // Show newest first
+    
+    res.json(suggestions);
+  } catch (error) {
+    console.error('Error fetching suggestions:', error);
+    res.status(500).json({ error: 'Failed to fetch suggestions' });
   }
 });
 
