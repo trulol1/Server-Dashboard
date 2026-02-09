@@ -260,6 +260,55 @@ app.delete('/api/messages/:id', verifyToken, requireAdmin, (req, res) => {
   res.json({ success: true });
 });
 
+// Discord Webhook Endpoint for Jellyfin Suggestions
+app.post('/api/jellyfin/suggestion', async (req, res) => {
+  const { name, text } = req.body;
+  const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
+  
+  if (!DISCORD_WEBHOOK_URL) {
+    return res.status(500).json({ error: 'Discord webhook not configured' });
+  }
+  
+  if (!name || !text) {
+    return res.status(400).json({ error: 'Name and text are required' });
+  }
+  
+  try {
+    const embed = {
+      title: '🎬 New Jellyfin Suggestion',
+      description: text,
+      color: 3447003,
+      author: {
+        name: name
+      },
+      timestamp: new Date().toISOString(),
+      footer: {
+        text: 'Jellyfin Server Suggestions'
+      }
+    };
+    
+    const response = await fetch(DISCORD_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        embeds: [embed]
+      })
+    });
+    
+    if (!response.ok) {
+      console.error('Discord API error:', response.status);
+      return res.status(500).json({ error: 'Failed to post to Discord' });
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error posting to Discord:', error);
+    res.status(500).json({ error: 'Failed to post suggestion' });
+  }
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

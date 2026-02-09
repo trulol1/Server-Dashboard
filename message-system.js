@@ -2,6 +2,9 @@
 // Determine if we're on the landing page or dashboard
 const currentPage = window.location.pathname.includes('/landing') ? 'landing' : 'dashboard';
 
+// Store messages locally as fallback
+let cachedMessages = [];
+
 // Load and display messages
 async function loadMessages() {
   if (!messagesContainer) return; // Exit if container doesn't exist
@@ -9,9 +12,21 @@ async function loadMessages() {
   try {
     const response = await fetch(`${API_BASE_URL}/messages`);
     const messages = await response.json();
+    cachedMessages = messages;
+    localStorage.setItem('cachedMessages', JSON.stringify(messages));
     displayMessages(messages);
   } catch (error) {
     console.error('Failed to load messages:', error);
+    // Fall back to cached messages from localStorage
+    const cached = localStorage.getItem('cachedMessages');
+    if (cached) {
+      try {
+        const messages = JSON.parse(cached);
+        displayMessages(messages);
+      } catch (e) {
+        console.error('Failed to parse cached messages:', e);
+      }
+    }
   }
 }
 
@@ -21,6 +36,13 @@ function displayMessages(messages) {
   messagesContainer.innerHTML = '';
   
   messages.forEach(msg => {
+    // Filter messages based on current page
+    const showOnLanding = msg.showOnLanding !== false; // Default to true
+    const showOnDashboard = msg.showOnDashboard !== false; // Default to true
+    
+    if (currentPage === 'landing' && !showOnLanding) return;
+    if (currentPage === 'dashboard' && !showOnDashboard) return;
+    
     const messageEl = document.createElement('div');
     messageEl.className = 'mb-4 p-4 rounded-lg shadow-lg animate-slideDown flex items-center justify-between';
     messageEl.style.backgroundColor = msg.color + '20';
@@ -50,11 +72,16 @@ function displayMessages(messages) {
 async function postMessage() {
   const text = messageText.value.trim();
   const duration = parseInt(messageDuration.value) || 0;
-  const showOnLanding = true;
-  const showOnDashboard = true;
+  const showOnLanding = document.getElementById('showOnLanding').checked;
+  const showOnDashboard = document.getElementById('showOnDashboard').checked;
   
   if (!text) {
     alert('Please enter a message');
+    return;
+  }
+  
+  if (!showOnLanding && !showOnDashboard) {
+    alert('Please select at least one page to show this message on');
     return;
   }
   
@@ -74,6 +101,8 @@ async function postMessage() {
     if (response.ok) {
       messageText.value = '';
       messageDuration.value = '0';
+      document.getElementById('showOnLanding').checked = true;
+      document.getElementById('showOnDashboard').checked = true;
       messageModal.classList.add('hidden');
       loadMessages();
     } else {
