@@ -311,13 +311,23 @@ app.post('/api/suggestions', async (req, res) => {
   }
 });
 
-// Get suggestions from Discord channel
+// Get suggestions from Discord channel (with caching)
+let suggestionsCache = [];
+let lastFetchTime = 0;
+const CACHE_DURATION = 60000; // Cache for 60 seconds
+
 app.get('/api/suggestions', async (req, res) => {
   const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
   const CHANNEL_ID = process.env.DISCORD_SUGGESTIONS_CHANNEL_ID;
   
   if (!BOT_TOKEN || !CHANNEL_ID) {
     return res.status(500).json({ error: 'Discord bot not configured' });
+  }
+  
+  // Return cached suggestions if fresh
+  const now = Date.now();
+  if (suggestionsCache.length > 0 && (now - lastFetchTime) < CACHE_DURATION) {
+    return res.json(suggestionsCache);
   }
   
   try {
@@ -330,13 +340,17 @@ app.get('/api/suggestions', async (req, res) => {
     
     if (!response.ok) {
       console.error('Discord API error:', response.status);
+      // Return cached data even if fetch fails
+      if (suggestionsCache.length > 0) {
+        return res.json(suggestionsCache);
+      }
       return res.status(500).json({ error: 'Failed to fetch suggestions' });
     }
     
     const messages = await response.json();
     
     // Parse messages with embeds (our suggestion format)
-    const suggestions = messages
+    suggestionsCache = messages
       .filter(msg => msg.embeds && msg.embeds.length > 0)
       .map(msg => {
         const embed = msg.embeds[0];
@@ -349,9 +363,14 @@ app.get('/api/suggestions', async (req, res) => {
       })
       .reverse(); // Show newest first
     
-    res.json(suggestions);
+    lastFetchTime = now;
+    res.json(suggestionsCache);
   } catch (error) {
     console.error('Error fetching suggestions:', error);
+    // Return cached data if available
+    if (suggestionsCache.length > 0) {
+      return res.json(suggestionsCache);
+    }
     res.status(500).json({ error: 'Failed to fetch suggestions' });
   }
 });
