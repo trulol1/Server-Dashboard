@@ -779,17 +779,15 @@ function showAuthModal() {
 }
 
 function updateAdminUI() {
-  // Show debug button if admin
+  // Show debug button and admin messages button only for admin
   if (authAPI.isUserAdmin()) {
-    debugMenuBtn.classList.remove('hidden');
-    if (debugMenuBtnHeader) {
-      debugMenuBtnHeader.classList.remove('hidden');
-    }
+    if (debugMenuBtn) debugMenuBtn.classList.remove('hidden');
+    if (debugMenuBtnHeader) debugMenuBtnHeader.classList.remove('hidden');
+    if (adminMessagesBtn) adminMessagesBtn.classList.remove('hidden');
   } else {
-    debugMenuBtn.classList.add('hidden');
-    if (debugMenuBtnHeader) {
-      debugMenuBtnHeader.classList.add('hidden');
-    }
+    if (debugMenuBtn) debugMenuBtn.classList.add('hidden');
+    if (debugMenuBtnHeader) debugMenuBtnHeader.classList.add('hidden');
+    if (adminMessagesBtn) adminMessagesBtn.classList.add('hidden');
   }
 }
 
@@ -800,14 +798,6 @@ function showDashboard() {
   document.body.classList.remove('auth-active');
 
   updateAdminUI();
-  
-  // Show admin messages button only for admin users
-  if (authAPI.isUserAdmin() && adminMessagesBtn) {
-    adminMessagesBtn.classList.remove('hidden');
-    console.log('Admin messages button shown');
-  } else if (adminMessagesBtn) {
-    adminMessagesBtn.classList.add('hidden');
-  }
   
   // Set random main dashboard background
   const randomBackground = getRandomMainDashboardBackground();
