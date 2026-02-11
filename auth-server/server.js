@@ -288,7 +288,7 @@ app.delete('/api/messages/:id', verifyToken, requireAdmin, (req, res) => {
 });
 
 // Discord Bot Endpoint for Suggestions (posts directly to server-suggestions channel)
-app.post('/api/suggestions', (req, res) => {
+app.post('/api/suggestions', async (req, res) => {
   const { name, text } = req.body;
 
   if (!name || !text) {
@@ -310,6 +310,9 @@ app.post('/api/suggestions', (req, res) => {
 
   const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
   const CHANNEL_ID = process.env.DISCORD_SUGGESTIONS_CHANNEL_ID;
+  let discordPosted = false;
+  let discordError = null;
+
   if (BOT_TOKEN && CHANNEL_ID) {
     const payload = {
       content: null,
@@ -329,19 +332,37 @@ app.post('/api/suggestions', (req, res) => {
       ]
     };
 
-    fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bot ${BOT_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    }).catch((error) => {
+    try {
+      const response = await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bot ${BOT_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const details = await response.text();
+        discordError = `Discord API error ${response.status}: ${details}`;
+        console.error('Error posting suggestion to Discord:', discordError);
+      } else {
+        discordPosted = true;
+      }
+    } catch (error) {
+      discordError = error?.message || 'Unknown Discord error';
       console.error('Error posting suggestion to Discord:', error);
-    });
+    }
+  } else {
+    discordError = 'Discord bot not configured';
   }
 
-  res.json({ success: true, suggestion: toSuggestionResponse(suggestion) });
+  res.json({
+    success: true,
+    suggestion: toSuggestionResponse(suggestion),
+    discordPosted,
+    discordError
+  });
 });
 
 app.get('/api/suggestions', (req, res) => {
