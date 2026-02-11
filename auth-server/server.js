@@ -371,7 +371,9 @@ app.post('/api/suggestions', async (req, res) => {
 });
 
 app.get('/api/suggestions', (req, res) => {
-  const response = suggestions.map(toSuggestionResponse);
+  const response = suggestions
+    .filter((item) => item.status !== 'resolved')
+    .map(toSuggestionResponse);
   res.json(response);
 });
 
@@ -426,7 +428,7 @@ app.post('/api/suggestions/:id/vote', (req, res) => {
 app.post('/api/suggestions/:id/status', verifyToken, requireAdmin, (req, res) => {
   const { id } = req.params;
   const { status } = req.body || {};
-  const allowedStatuses = ['pending', 'planned', 'approved', 'rejected'];
+  const allowedStatuses = ['pending', 'planned', 'approved', 'rejected', 'resolved'];
 
   if (!allowedStatuses.includes(status)) {
     return res.status(400).json({ error: 'Invalid status' });

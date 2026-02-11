@@ -2057,7 +2057,8 @@ const suggestionStatusMeta = {
   pending: { label: 'Pending', badgeClass: 'bg-slate-600 text-slate-100' },
   planned: { label: 'Planned', badgeClass: 'bg-blue-600 text-white' },
   approved: { label: 'Approved', badgeClass: 'bg-green-600 text-white' },
-  rejected: { label: 'Rejected', badgeClass: 'bg-red-600 text-white' }
+  rejected: { label: 'Rejected', badgeClass: 'bg-red-600 text-white' },
+  resolved: { label: 'Resolved', badgeClass: 'bg-emerald-600 text-white' }
 };
 
 // Load suggestions
@@ -2132,6 +2133,7 @@ function displayJellyfinSuggestions(suggestions) {
                 <option value="planned" ${status === 'planned' ? 'selected' : ''}>Planned</option>
                 <option value="approved" ${status === 'approved' ? 'selected' : ''}>Approved</option>
                 <option value="rejected" ${status === 'rejected' ? 'selected' : ''}>Rejected</option>
+                <option value="resolved" ${status === 'resolved' ? 'selected' : ''}>Resolved</option>
               </select>
             </div>
           ` : ''}
