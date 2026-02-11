@@ -425,7 +425,7 @@ app.post('/api/suggestions/:id/vote', (req, res) => {
   res.json({ success: true, suggestion: toSuggestionResponse(suggestion) });
 });
 
-app.post('/api/suggestions/:id/status', verifyToken, requireAdmin, (req, res) => {
+app.post('/api/suggestions/:id/status', verifyToken, requireAdmin, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body || {};
   const allowedStatuses = ['pending', 'planned', 'approved', 'rejected', 'resolved'];
@@ -439,8 +439,17 @@ app.post('/api/suggestions/:id/status', verifyToken, requireAdmin, (req, res) =>
     return res.status(404).json({ error: 'Suggestion not found' });
   }
 
+  const oldStatus = suggestion.status;
   suggestion.status = status;
   saveSuggestions();
+
+  // Post status update to Discord if configured
+  if (oldStatus !== status) {
+    postDiscordStatusUpdate(suggestion).catch((err) => {
+      console.error('Error posting status update to Discord:', err);
+    });
+  }
+
   res.json({ success: true, suggestion: toSuggestionResponse(suggestion) });
 });
 
@@ -454,6 +463,69 @@ app.delete('/api/suggestions/:id', verifyToken, requireAdmin, (req, res) => {
   saveSuggestions();
   res.json({ success: true });
 });
+
+async function postDiscordStatusUpdate(suggestion) {
+  const WEBHOOK_URL = process.env.DISCORD_SUGGESTIONS_WEBHOOK_URL;
+  const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
+  const CHANNEL_ID = process.env.DISCORD_SUGGESTIONS_CHANNEL_ID;
+
+  if (!WEBHOOK_URL && !(BOT_TOKEN && CHANNEL_ID)) {
+    return;
+  }
+
+  const statusColors = {
+    pending: 0xA0A0A0,
+    planned: 0x3B82F6,
+    approved: 0x10B981,
+    rejected: 0xEF4444,
+    resolved: 0x059669
+  };
+
+  const statusEmojis = {
+    pending: '⏳',
+    planned: '📋',
+    approved: '✅',
+    rejected: '❌',
+    resolved: '🎉'
+  };
+
+  const payload = {
+    embeds: [
+      {
+        title: `${statusEmojis[suggestion.status]} Suggestion Status Updated`,
+        description: suggestion.text,
+        color: statusColors[suggestion.status] || 0xA0A0A0,
+        author: { name: suggestion.name },
+        fields: [
+          { name: 'Status', value: suggestion.status.charAt(0).toUpperCase() + suggestion.status.slice(1), inline: true },
+          { name: 'ID', value: suggestion.id, inline: true },
+          { name: 'Votes', value: `👍 ${suggestion.votes.up} | 👎 ${suggestion.votes.down}`, inline: true }
+        ],
+        timestamp: new Date().toISOString(),
+        footer: { text: 'Community Suggestions' }
+      }
+    ]
+  };
+
+  const url = WEBHOOK_URL || `https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`;
+  const headers = WEBHOOK_URL
+    ? { 'Content-Type': 'application/json' }
+    : {
+      'Authorization': `Bot ${BOT_TOKEN}`,
+      'Content-Type': 'application/json'
+    };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Discord API error ${response.status}: ${details}`);
+  }
+}
 
 // Health check
 app.get('/health', (req, res) => {
