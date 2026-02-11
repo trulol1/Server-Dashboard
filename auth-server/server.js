@@ -191,9 +191,9 @@ app.post('/api/auth/login', (req, res) => {
     return res.status(401).json({ error: 'Invalid or expired code' });
   }
 
-  // Generate JWT token (expires in 24 hours)
+  // Generate JWT token (expires in 24 hours) - TOTP users get 'user' role
   const token = jwt.sign(
-    { authenticated: true, role: 'admin', timestamp: Date.now() },
+    { authenticated: true, role: 'user', timestamp: Date.now() },
     JWT_SECRET,
     { expiresIn: '24h' }
   );
@@ -201,7 +201,7 @@ app.post('/api/auth/login', (req, res) => {
   res.json({
     success: true,
     token,
-    role: 'admin',
+    role: 'user',
     expiresIn: 86400 // 24 hours in seconds
   });
 });
