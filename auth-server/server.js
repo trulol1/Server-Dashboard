@@ -308,14 +308,14 @@ app.post('/api/suggestions', async (req, res) => {
   suggestions.unshift(suggestion);
   saveSuggestions();
 
+  const WEBHOOK_URL = process.env.DISCORD_SUGGESTIONS_WEBHOOK_URL;
   const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
   const CHANNEL_ID = process.env.DISCORD_SUGGESTIONS_CHANNEL_ID;
   let discordPosted = false;
   let discordError = null;
 
-  if (BOT_TOKEN && CHANNEL_ID) {
+  if (WEBHOOK_URL || (BOT_TOKEN && CHANNEL_ID)) {
     const payload = {
-      content: null,
       embeds: [
         {
           title: '💡 New Suggestion',
@@ -333,12 +333,17 @@ app.post('/api/suggestions', async (req, res) => {
     };
 
     try {
-      const response = await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
-        method: 'POST',
-        headers: {
+      const url = WEBHOOK_URL || `https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`;
+      const headers = WEBHOOK_URL
+        ? { 'Content-Type': 'application/json' }
+        : {
           'Authorization': `Bot ${BOT_TOKEN}`,
           'Content-Type': 'application/json'
-        },
+        };
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
         body: JSON.stringify(payload)
       });
 
@@ -354,7 +359,7 @@ app.post('/api/suggestions', async (req, res) => {
       console.error('Error posting suggestion to Discord:', error);
     }
   } else {
-    discordError = 'Discord bot not configured';
+    discordError = 'Discord webhook or bot not configured';
   }
 
   res.json({
@@ -371,13 +376,15 @@ app.get('/api/suggestions', (req, res) => {
 });
 
 app.get('/api/suggestions/health', (req, res) => {
+  const WEBHOOK_URL = process.env.DISCORD_SUGGESTIONS_WEBHOOK_URL;
   const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
   const CHANNEL_ID = process.env.DISCORD_SUGGESTIONS_CHANNEL_ID;
 
   res.json({
     status: 'ok',
     suggestionsCount: suggestions.length,
-    discordConfigured: Boolean(BOT_TOKEN && CHANNEL_ID),
+    discordConfigured: Boolean(WEBHOOK_URL || (BOT_TOKEN && CHANNEL_ID)),
+    discordWebhookSet: Boolean(WEBHOOK_URL),
     discordBotTokenSet: Boolean(BOT_TOKEN),
     discordChannelIdSet: Boolean(CHANNEL_ID)
   });
