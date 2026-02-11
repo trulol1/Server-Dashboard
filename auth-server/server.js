@@ -65,6 +65,33 @@ function saveMessages() {
   fs.writeFileSync(messagesFile, JSON.stringify(messages, null, 2));
 }
 
+// Suggestions storage (local, replaces Discord integration)
+const suggestionsFile = path.join(__dirname, '.suggestions.json');
+let suggestions = [];
+if (fs.existsSync(suggestionsFile)) {
+  try {
+    suggestions = JSON.parse(fs.readFileSync(suggestionsFile, 'utf8'));
+  } catch (err) {
+    console.error('Failed to load suggestions:', err);
+    suggestions = [];
+  }
+}
+
+function saveSuggestions() {
+  fs.writeFileSync(suggestionsFile, JSON.stringify(suggestions, null, 2));
+}
+
+function toSuggestionResponse(suggestion) {
+  return {
+    id: suggestion.id,
+    name: suggestion.name,
+    text: suggestion.text,
+    createdAt: suggestion.createdAt,
+    status: suggestion.status,
+    votes: suggestion.votes
+  };
+}
+
 // Initialize or load TOTP secret
 let TOTP_SECRET = (process.env.TOTP_SECRET || '').trim();
 const secretFile = path.join(__dirname, '.totp-secret');
@@ -261,118 +288,141 @@ app.delete('/api/messages/:id', verifyToken, requireAdmin, (req, res) => {
 });
 
 // Discord Bot Endpoint for Suggestions (posts directly to server-suggestions channel)
-app.post('/api/suggestions', async (req, res) => {
+app.post('/api/suggestions', (req, res) => {
   const { name, text } = req.body;
-  const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
-  const CHANNEL_ID = process.env.DISCORD_SUGGESTIONS_CHANNEL_ID;
-
-  if (!BOT_TOKEN || !CHANNEL_ID) {
-    return res.status(500).json({ error: 'Discord bot not configured' });
-  }
 
   if (!name || !text) {
     return res.status(400).json({ error: 'Name and text are required' });
   }
 
-  try {
-    const embed = {
-      title: '💡 New Suggestion',
-      description: text,
-      color: 10813440,
-      author: {
-        name: name
-      },
-      timestamp: new Date().toISOString(),
-      footer: {
-        text: 'Community Suggestions'
-      }
+  const suggestion = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    name: name.toString().trim(),
+    text: text.toString().trim(),
+    createdAt: Date.now(),
+    status: 'pending',
+    votes: { up: 0, down: 0 },
+    voters: {}
+  };
+
+  suggestions.unshift(suggestion);
+  saveSuggestions();
+
+  const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
+  const CHANNEL_ID = process.env.DISCORD_SUGGESTIONS_CHANNEL_ID;
+  if (BOT_TOKEN && CHANNEL_ID) {
+    const payload = {
+      content: null,
+      embeds: [
+        {
+          title: '💡 New Suggestion',
+          description: suggestion.text,
+          color: 10813440,
+          author: { name: suggestion.name },
+          fields: [
+            { name: 'Status', value: 'Pending', inline: true },
+            { name: 'ID', value: suggestion.id, inline: true }
+          ],
+          timestamp: new Date(suggestion.createdAt).toISOString(),
+          footer: { text: 'Community Suggestions' }
+        }
+      ]
     };
 
-    const response = await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
+    fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
       method: 'POST',
       headers: {
         'Authorization': `Bot ${BOT_TOKEN}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        embeds: [embed]
-      })
+      body: JSON.stringify(payload)
+    }).catch((error) => {
+      console.error('Error posting suggestion to Discord:', error);
     });
-
-    if (!response.ok) {
-      console.error('Discord API error:', response.status);
-      return res.status(500).json({ error: 'Failed to post to Discord' });
-    }
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error posting to Discord:', error);
-    res.status(500).json({ error: 'Failed to post suggestion' });
   }
+
+  res.json({ success: true, suggestion: toSuggestionResponse(suggestion) });
 });
 
-// Get suggestions from Discord channel (with caching)
-let suggestionsCache = [];
-let lastFetchTime = 0;
-const CACHE_DURATION = 60000; // Cache for 60 seconds
+app.get('/api/suggestions', (req, res) => {
+  const response = suggestions.map(toSuggestionResponse);
+  res.json(response);
+});
 
-app.get('/api/suggestions', async (req, res) => {
+app.get('/api/suggestions/health', (req, res) => {
   const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
   const CHANNEL_ID = process.env.DISCORD_SUGGESTIONS_CHANNEL_ID;
-  
-  if (!BOT_TOKEN || !CHANNEL_ID) {
-    return res.status(500).json({ error: 'Discord bot not configured' });
+
+  res.json({
+    status: 'ok',
+    suggestionsCount: suggestions.length,
+    discordConfigured: Boolean(BOT_TOKEN && CHANNEL_ID),
+    discordBotTokenSet: Boolean(BOT_TOKEN),
+    discordChannelIdSet: Boolean(CHANNEL_ID)
+  });
+});
+
+app.post('/api/suggestions/:id/vote', (req, res) => {
+  const { id } = req.params;
+  const { direction, voterId } = req.body || {};
+
+  if (!voterId || !direction) {
+    return res.status(400).json({ error: 'Voter ID and direction are required' });
   }
-  
-  // Return cached suggestions if fresh
-  const now = Date.now();
-  if (suggestionsCache.length > 0 && (now - lastFetchTime) < CACHE_DURATION) {
-    return res.json(suggestionsCache);
+
+  if (!['up', 'down'].includes(direction)) {
+    return res.status(400).json({ error: 'Invalid vote direction' });
   }
-  
-  try {
-    const response = await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages?limit=50`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bot ${BOT_TOKEN}`
-      }
-    });
-    
-    if (!response.ok) {
-      console.error('Discord API error:', response.status);
-      // Return cached data even if fetch fails
-      if (suggestionsCache.length > 0) {
-        return res.json(suggestionsCache);
-      }
-      return res.status(500).json({ error: 'Failed to fetch suggestions' });
-    }
-    
-    const messages = await response.json();
-    
-    // Parse messages with embeds (our suggestion format)
-    suggestionsCache = messages
-      .filter(msg => msg.embeds && msg.embeds.length > 0)
-      .map(msg => {
-        const embed = msg.embeds[0];
-        return {
-          id: msg.id,
-          name: embed.author?.name || 'Anonymous',
-          text: embed.description || '',
-          timestamp: msg.timestamp
-        };
-      })
-      .reverse(); // Show newest first
-    
-    lastFetchTime = now;
-    res.json(suggestionsCache);
-  } catch (error) {
-    console.error('Error fetching suggestions:', error);
-    // Return cached data if available
-    if (suggestionsCache.length > 0) {
-      return res.json(suggestionsCache);
-    }
-    res.status(500).json({ error: 'Failed to fetch suggestions' });
+
+  const suggestion = suggestions.find((item) => item.id === id);
+  if (!suggestion) {
+    return res.status(404).json({ error: 'Suggestion not found' });
   }
+
+  const previousVote = suggestion.voters[voterId];
+  if (previousVote === direction) {
+    return res.json({ success: true, suggestion: toSuggestionResponse(suggestion) });
+  }
+
+  if (previousVote === 'up') suggestion.votes.up = Math.max(0, suggestion.votes.up - 1);
+  if (previousVote === 'down') suggestion.votes.down = Math.max(0, suggestion.votes.down - 1);
+
+  suggestion.voters[voterId] = direction;
+  if (direction === 'up') suggestion.votes.up += 1;
+  if (direction === 'down') suggestion.votes.down += 1;
+
+  saveSuggestions();
+  res.json({ success: true, suggestion: toSuggestionResponse(suggestion) });
+});
+
+app.post('/api/suggestions/:id/status', verifyToken, requireAdmin, (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body || {};
+  const allowedStatuses = ['pending', 'planned', 'approved', 'rejected'];
+
+  if (!allowedStatuses.includes(status)) {
+    return res.status(400).json({ error: 'Invalid status' });
+  }
+
+  const suggestion = suggestions.find((item) => item.id === id);
+  if (!suggestion) {
+    return res.status(404).json({ error: 'Suggestion not found' });
+  }
+
+  suggestion.status = status;
+  saveSuggestions();
+  res.json({ success: true, suggestion: toSuggestionResponse(suggestion) });
+});
+
+app.delete('/api/suggestions/:id', verifyToken, requireAdmin, (req, res) => {
+  const { id } = req.params;
+  const beforeCount = suggestions.length;
+  suggestions = suggestions.filter((item) => item.id !== id);
+  if (suggestions.length === beforeCount) {
+    return res.status(404).json({ error: 'Suggestion not found' });
+  }
+  saveSuggestions();
+  res.json({ success: true });
 });
 
 // Health check

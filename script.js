@@ -2043,45 +2043,126 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ==================== SUGGESTIONS SYSTEM ====================
 
-// Load suggestions from Discord
+function getSuggestionClientId() {
+  const key = 'suggestionClientId';
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = `client_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
+
+const suggestionStatusMeta = {
+  pending: { label: 'Pending', badgeClass: 'bg-slate-600 text-slate-100' },
+  planned: { label: 'Planned', badgeClass: 'bg-blue-600 text-white' },
+  approved: { label: 'Approved', badgeClass: 'bg-green-600 text-white' },
+  rejected: { label: 'Rejected', badgeClass: 'bg-red-600 text-white' }
+};
+
+// Load suggestions
 async function loadJellyfinSuggestions() {
   try {
     const response = await fetch(`${API_BASE_URL}/suggestions`);
     const suggestions = await response.json();
-    displayJellyfinSuggestions(suggestions);
-    updateSuggestionCount(suggestions.length);
+    displayJellyfinSuggestions(Array.isArray(suggestions) ? suggestions : []);
+    updateSuggestionCount(Array.isArray(suggestions) ? suggestions.length : 0);
   } catch (error) {
     console.error('Failed to load suggestions:', error);
     displayJellyfinSuggestions([]);
   }
 }
 
+function formatSuggestionDate(timestamp) {
+  if (!timestamp) return '';
+  return new Date(timestamp).toLocaleDateString();
+}
+
+function renderStatusBadge(status) {
+  const meta = suggestionStatusMeta[status] || suggestionStatusMeta.pending;
+  return `<span class="px-2 py-1 rounded text-xs ${meta.badgeClass}">${meta.label}</span>`;
+}
+
 // Display suggestions
 function displayJellyfinSuggestions(suggestions) {
   const suggestionsList = document.getElementById('suggestionsList');
   if (!suggestionsList) return;
-  
+
   if (suggestions.length === 0) {
     suggestionsList.innerHTML = '<p class="text-slate-400 text-center py-4">No suggestions yet. Be the first to suggest something!</p>';
     return;
   }
-  
-  suggestionsList.innerHTML = suggestions.map((suggestion, index) => `
-    <div class="bg-slate-700 rounded-lg p-4 border-l-4 border-purple-500">
-      <div class="flex items-start justify-between mb-2">
-        <div>
-          <p class="font-semibold text-slate-100">${escapeHtml(suggestion.name)}</p>
-          <p class="text-xs text-slate-400">${new Date(suggestion.timestamp).toLocaleDateString()}</p>
+
+  const isAdmin = typeof authAPI !== 'undefined' && authAPI.isUserAdmin();
+
+  suggestionsList.innerHTML = suggestions.map((suggestion) => {
+    const safeName = escapeHtml(suggestion.name || 'Anonymous');
+    const safeText = escapeHtml(suggestion.text || '');
+    const status = suggestion.status || 'pending';
+    const votes = suggestion.votes || { up: 0, down: 0 };
+    const dateText = formatSuggestionDate(suggestion.createdAt || suggestion.timestamp);
+
+    return `
+      <div class="bg-slate-700 rounded-lg p-4 border-l-4 border-purple-500">
+        <div class="flex items-start justify-between gap-3 mb-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <p class="font-semibold text-slate-100">${safeName}</p>
+              ${renderStatusBadge(status)}
+            </div>
+            <p class="text-xs text-slate-400">${dateText}</p>
+          </div>
+          ${isAdmin ? `
+            <button data-suggestion-delete="${suggestion.id}" class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-white text-xs transition">
+              Delete
+            </button>
+          ` : ''}
         </div>
-        ${typeof authAPI !== 'undefined' && authAPI.isUserAdmin() ? `
-          <button onclick="deleteSuggestionFromDiscord('${suggestion.id}')" class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-white text-xs transition">
-            Delete
-          </button>
-        ` : ''}
+        <p class="text-slate-200 mb-3">${safeText}</p>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <button data-suggestion-vote="up" data-suggestion-id="${suggestion.id}" class="px-2 py-1 bg-slate-800 hover:bg-slate-600 rounded text-xs text-slate-100 transition">👍 ${votes.up}</button>
+            <button data-suggestion-vote="down" data-suggestion-id="${suggestion.id}" class="px-2 py-1 bg-slate-800 hover:bg-slate-600 rounded text-xs text-slate-100 transition">👎 ${votes.down}</button>
+          </div>
+          ${isAdmin ? `
+            <div class="flex items-center gap-2 text-xs text-slate-400">
+              <span>Status</span>
+              <select data-suggestion-status="${suggestion.id}" class="bg-slate-900 border border-slate-600 rounded px-2 py-1 text-slate-100">
+                <option value="pending" ${status === 'pending' ? 'selected' : ''}>Pending</option>
+                <option value="planned" ${status === 'planned' ? 'selected' : ''}>Planned</option>
+                <option value="approved" ${status === 'approved' ? 'selected' : ''}>Approved</option>
+                <option value="rejected" ${status === 'rejected' ? 'selected' : ''}>Rejected</option>
+              </select>
+            </div>
+          ` : ''}
+        </div>
       </div>
-      <p class="text-slate-200">${escapeHtml(suggestion.text)}</p>
-    </div>
-  `).join('');
+    `;
+  }).join('');
+
+  suggestionsList.querySelectorAll('[data-suggestion-vote]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const direction = btn.getAttribute('data-suggestion-vote');
+      const suggestionId = btn.getAttribute('data-suggestion-id');
+      voteOnSuggestion(suggestionId, direction);
+    });
+  });
+
+  if (isAdmin) {
+    suggestionsList.querySelectorAll('[data-suggestion-status]').forEach((select) => {
+      select.addEventListener('change', () => {
+        const suggestionId = select.getAttribute('data-suggestion-status');
+        updateSuggestionStatus(suggestionId, select.value);
+      });
+    });
+
+    suggestionsList.querySelectorAll('[data-suggestion-delete]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const suggestionId = btn.getAttribute('data-suggestion-delete');
+        deleteSuggestion(suggestionId);
+      });
+    });
+  }
 }
 
 // Update suggestion count
@@ -2090,68 +2171,112 @@ function updateSuggestionCount(count) {
   if (countEl) countEl.textContent = count;
 }
 
-// Add new suggestion (sends to Discord via backend)
+// Add new suggestion
 function submitJellyfinSuggestion() {
   const nameInput = document.getElementById('suggestionName');
   const textInput = document.getElementById('suggestionText');
-  
+
   const name = nameInput.value.trim();
   const text = textInput.value.trim();
-  
+
   if (!name) {
     alert('Please enter your name');
     return;
   }
-  
+
   if (!text) {
     alert('Please enter your suggestion');
     return;
   }
-  
-  // Send to Discord via backend
-  sendSuggestionToDiscord(name, text);
-  
-  // Clear form
+
+  createSuggestion(name, text);
+
   nameInput.value = '';
   textInput.value = '';
   document.getElementById('suggestionForm').classList.add('hidden');
 }
 
-// Send suggestion to Discord via backend webhook
-async function sendSuggestionToDiscord(name, text) {
+async function createSuggestion(name, text) {
   try {
     const response = await fetch(`${API_BASE_URL}/suggestions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        name,
-        text
-      })
+      body: JSON.stringify({ name, text })
     });
-    
+
     if (response.ok) {
-      console.log('Suggestion sent to Discord successfully');
-      setTimeout(() => loadJellyfinSuggestions(), 1000); // Refresh after 1 second
+      await loadJellyfinSuggestions();
     } else {
       alert('Failed to post suggestion');
     }
   } catch (error) {
-    console.error('Error sending suggestion to Discord:', error);
+    console.error('Error posting suggestion:', error);
     alert('Failed to post suggestion');
   }
 }
 
-// Delete suggestion from Discord (admin only)
-async function deleteSuggestionFromDiscord(messageId) {
-  if (!confirm('Are you sure you want to delete this suggestion?')) return;
-  
+async function voteOnSuggestion(suggestionId, direction) {
+  if (!suggestionId) return;
+
   try {
-    // Since Discord doesn't allow deleting via webhook, we'd need bot token
-    // For now, just refresh the list
-    alert('Admin deletion requires Discord bot setup');
-    loadJellyfinSuggestions();
+    const response = await fetch(`${API_BASE_URL}/suggestions/${suggestionId}/vote`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        direction,
+        voterId: getSuggestionClientId()
+      })
+    });
+
+    if (response.ok) {
+      await loadJellyfinSuggestions();
+    } else {
+      alert('Failed to vote on suggestion');
+    }
+  } catch (error) {
+    console.error('Error voting on suggestion:', error);
+  }
+}
+
+async function updateSuggestionStatus(suggestionId, status) {
+  if (!suggestionId) return;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/suggestions/${suggestionId}/status`, {
+      method: 'POST',
+      headers: authAPI.getAuthHeader(),
+      body: JSON.stringify({ status })
+    });
+
+    if (response.ok) {
+      await loadJellyfinSuggestions();
+    } else {
+      alert('Failed to update status');
+    }
+  } catch (error) {
+    console.error('Error updating status:', error);
+  }
+}
+
+async function deleteSuggestion(suggestionId) {
+  if (!suggestionId) return;
+  if (!confirm('Are you sure you want to delete this suggestion?')) return;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/suggestions/${suggestionId}`, {
+      method: 'DELETE',
+      headers: authAPI.getAuthHeader()
+    });
+
+    if (response.ok) {
+      await loadJellyfinSuggestions();
+    } else {
+      alert('Failed to delete suggestion');
+    }
   } catch (error) {
     console.error('Error deleting suggestion:', error);
   }
