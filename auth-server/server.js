@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
@@ -13,6 +13,13 @@ const JWT_SECRET = process.env.JWT_SECRET || 'CHANGE_ME_IN_ENV_FILE_VERY_IMPORTA
 const APP_NAME = process.env.APP_NAME || 'ServerIndex';
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'skibiditoilet';
+const SPOTIFY_CLIENT_ID = (process.env.SPOTIFY_CLIENT_ID || '').trim();
+const SPOTIFY_CLIENT_SECRET = (process.env.SPOTIFY_CLIENT_SECRET || '').trim();
+
+let spotifyTokenCache = {
+  accessToken: null,
+  expiresAt: 0
+};
 
 // Middleware
 app.use(express.json());
@@ -79,6 +86,51 @@ if (fs.existsSync(suggestionsFile)) {
 
 function saveSuggestions() {
   fs.writeFileSync(suggestionsFile, JSON.stringify(suggestions, null, 2));
+}
+
+async function getSpotifyAccessToken() {
+  const now = Date.now();
+  if (spotifyTokenCache.accessToken && spotifyTokenCache.expiresAt > now + 30000) {
+    return spotifyTokenCache.accessToken;
+  }
+
+  if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
+    const error = new Error('Spotify API credentials are not configured on the server.');
+    error.statusCode = 503;
+    throw error;
+  }
+
+  const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': `Basic ${Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64')}`
+    },
+    body: new URLSearchParams({ grant_type: 'client_credentials' }).toString()
+  });
+
+  if (!tokenResponse.ok) {
+    const details = await tokenResponse.text();
+    const error = new Error(`Spotify token request failed (${tokenResponse.status}): ${details}`);
+    error.statusCode = 502;
+    throw error;
+  }
+
+  const tokenData = await tokenResponse.json();
+  spotifyTokenCache = {
+    accessToken: tokenData.access_token,
+    expiresAt: now + ((tokenData.expires_in || 3600) * 1000)
+  };
+
+  return spotifyTokenCache.accessToken;
+}
+
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
 }
 
 function toSuggestionResponse(suggestion) {
@@ -534,6 +586,59 @@ app.get('/health', (req, res) => {
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'Server is running' });
+});
+
+app.get('/api/music/random-albums', async (req, res) => {
+  const requestedCount = Number.parseInt(req.query.count, 10);
+  const count = Number.isInteger(requestedCount) ? Math.min(Math.max(requestedCount, 1), 20) : 8;
+  const marketParam = (req.query.market || 'US').toString().trim().toUpperCase();
+  const market = /^[A-Z]{2}$/.test(marketParam) ? marketParam : 'US';
+
+  try {
+    const accessToken = await getSpotifyAccessToken();
+
+    const uniqueOffsets = new Set();
+    while (uniqueOffsets.size < 3) {
+      uniqueOffsets.add(Math.floor(Math.random() * 20) * 50);
+    }
+
+    let albums = [];
+
+    for (const offset of uniqueOffsets) {
+      const response = await fetch(`https://api.spotify.com/v1/browse/new-releases?limit=50&offset=${offset}&market=${market}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+
+      if (!response.ok) {
+        const details = await response.text();
+        throw new Error(`Spotify albums request failed (${response.status}): ${details}`);
+      }
+
+      const data = await response.json();
+      const items = data?.albums?.items || [];
+      albums = albums.concat(items);
+    }
+
+    if (!albums.length) {
+      return res.status(502).json({ error: 'Spotify did not return any albums.' });
+    }
+
+    const uniqueById = new Map();
+    albums.forEach((album) => {
+      if (album?.id && !uniqueById.has(album.id)) {
+        uniqueById.set(album.id, album);
+      }
+    });
+
+    const randomizedAlbums = shuffleArray(Array.from(uniqueById.values())).slice(0, count);
+    res.json({ albums: randomizedAlbums });
+  } catch (error) {
+    const statusCode = error.statusCode || 500;
+    console.error('Spotify album recommendation error:', error);
+    res.status(statusCode).json({ error: error.message || 'Failed to fetch Spotify album recommendations.' });
+  }
 });
 
 // Serve landing.html for /landing (BEFORE static files middleware)
