@@ -146,14 +146,14 @@ function isWithinLastYear(releaseDate, now = new Date()) {
 
 function renderAlbumCard(album) {
   const card = document.createElement('div');
-  card.className = 'bg-slate-900 border border-slate-700 rounded-lg overflow-hidden shadow';
+  card.className = 'rounded-lg overflow-hidden shadow music-glass-subtle';
 
   const ratingText = typeof album.rymRating === 'number'
     ? `RYM rating: ${album.rymRating.toFixed(2)} / 5.00`
     : 'RYM rating: N/A (backup recommendation)';
 
   card.innerHTML = `
-    <div class="bg-slate-800 px-4 py-6 text-center text-slate-300 text-sm">
+    <div class="px-4 py-6 text-center text-slate-300 text-sm" style="background: rgba(15, 23, 42, 0.42); border-bottom: 1px solid rgba(148, 163, 184, 0.2);">
       Rate Your Music album page link
     </div>
     <div class="p-3">
