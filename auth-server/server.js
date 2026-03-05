@@ -622,6 +622,215 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'Server is running' });
 });
 
+app.get('/api/music/album-cover', async (req, res) => {
+  const rawQuery = (req.query.query || '').toString().trim();
+  const artist = (req.query.artist || '').toString().trim();
+  const album = (req.query.album || '').toString().trim();
+  const query = rawQuery || [artist, album].filter(Boolean).join(' ');
+
+  if (!query) {
+    return res.status(400).json({ error: 'A search query is required.' });
+  }
+
+  try {
+    const accessToken = await getSpotifyAccessToken();
+    const searchParams = new URLSearchParams({
+      type: 'album',
+      q: query,
+      limit: '1',
+      market: 'US'
+    });
+
+    const response = await fetch(`https://api.spotify.com/v1/search?${searchParams.toString()}`, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+
+    if (!response.ok) {
+      const details = await response.text();
+      throw new Error(`Spotify album-cover request failed (${response.status}): ${details}`);
+    }
+
+    const data = await response.json();
+    const albumItem = data?.albums?.items?.[0] || null;
+    const coverUrl = albumItem?.images?.[0]?.url || null;
+
+    res.json({
+      coverUrl,
+      albumName: albumItem?.name || null,
+      artistName: albumItem?.artists?.[0]?.name || null,
+      releaseDate: albumItem?.release_date || null,
+      source: 'spotify'
+    });
+  } catch (error) {
+    const statusCode = error.statusCode || 500;
+    console.error('Spotify album-cover lookup error:', error);
+    res.status(statusCode).json({ error: error.message || 'Failed to fetch album cover.' });
+  }
+});
+
+function parseRymReleaseInfo(rymUrl) {
+  try {
+    const parsed = new URL(rymUrl);
+    const parts = parsed.pathname.split('/').filter(Boolean);
+    const releaseIndex = parts.findIndex((part) => part === 'release');
+
+    if (releaseIndex !== -1 && parts[releaseIndex + 1] === 'album') {
+      const artistSlug = parts[releaseIndex + 2] || '';
+      const albumSlug = parts[releaseIndex + 3] || '';
+      const normalize = (value) => decodeURIComponent(value).replace(/[-_]+/g, ' ').trim();
+      const artist = normalize(artistSlug);
+      const album = normalize(albumSlug);
+      if (artist && album) return { artist, album, title: `${artist} - ${album}` };
+      if (album) return { artist: '', album, title: album };
+    }
+  } catch {
+    // Fall through to empty title
+  }
+
+  return { artist: '', album: '', title: '' };
+}
+
+function parseRymMetadataFromHtml(html) {
+  const result = {
+    score: null,
+    releaseDate: null
+  };
+
+  if (!html || typeof html !== 'string') {
+    return result;
+  }
+
+  const jsonLdMatches = [...html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
+  for (const match of jsonLdMatches) {
+    const jsonText = (match[1] || '').trim();
+    if (!jsonText) continue;
+
+    try {
+      const payload = JSON.parse(jsonText);
+      const entries = Array.isArray(payload) ? payload : [payload];
+
+      for (const entry of entries) {
+        if (!entry || typeof entry !== 'object') continue;
+        const ratingValue = Number.parseFloat(entry?.aggregateRating?.ratingValue);
+        if (Number.isFinite(ratingValue) && result.score === null) {
+          result.score = ratingValue;
+        }
+
+        const datePublished = (entry?.datePublished || '').toString().trim();
+        if (datePublished && result.releaseDate === null) {
+          result.releaseDate = datePublished;
+        }
+      }
+    } catch {
+      // Ignore malformed json-ld blocks
+    }
+  }
+
+  if (result.score === null) {
+    const scoreMatch = html.match(/(?:Average|avg(?:\.|\s)?rating|ratingValue)[^\d]{0,20}(\d\.\d{1,2}|\d{1,2}\.\d{1,2})/i);
+    if (scoreMatch?.[1]) {
+      const parsed = Number.parseFloat(scoreMatch[1]);
+      if (Number.isFinite(parsed)) result.score = parsed;
+    }
+  }
+
+  if (result.releaseDate === null) {
+    const releaseMatch = html.match(/(?:Release Date|Released)[^\w]{0,20}([A-Za-z]{3,9}\s+\d{1,2},\s+\d{4}|\d{4}-\d{2}-\d{2})/i);
+    if (releaseMatch?.[1]) {
+      result.releaseDate = releaseMatch[1].trim();
+    }
+  }
+
+  return result;
+}
+
+app.get('/api/music/rym-metadata', async (req, res) => {
+  const url = (req.query.url || '').toString().trim();
+  if (!url) {
+    return res.status(400).json({ error: 'RYM URL is required.' });
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return res.status(400).json({ error: 'Invalid URL.' });
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+  if (!(hostname === 'rateyourmusic.com' || hostname === 'www.rateyourmusic.com')) {
+    return res.status(400).json({ error: 'Only rateyourmusic.com URLs are allowed.' });
+  }
+
+  try {
+    const response = await fetch(parsed.toString(), {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; ServerIndex/1.0; +https://github.com/trulol1/Server-Dashboard)',
+        'Accept': 'text/html,application/xhtml+xml'
+      }
+    });
+
+    if (!response.ok) {
+      const details = await response.text();
+      throw new Error(`RYM request failed (${response.status}): ${details.slice(0, 200)}`);
+    }
+
+    const html = await response.text();
+    const metadata = parseRymMetadataFromHtml(html);
+
+    res.json({
+      score: metadata.score,
+      releaseDate: metadata.releaseDate,
+      source: 'rym'
+    });
+  } catch (error) {
+    console.error('Failed to fetch RYM metadata:', error);
+    res.status(502).json({ error: 'Failed to fetch metadata from RYM link.' });
+  }
+});
+
+app.get('/api/music/tru-recommendations', (req, res) => {
+  try {
+    const musicDir = path.join(__dirname, '..', 'assets', 'music');
+    if (!fs.existsSync(musicDir)) {
+      return res.json({ recommendations: [] });
+    }
+
+    const files = fs.readdirSync(musicDir);
+    const imageFiles = files.filter((file) => /\.(jpg|jpeg|png|webp)$/i.test(file));
+    const txtFiles = files.filter((file) => /-rym\.txt$/i.test(file));
+
+    const recommendations = txtFiles.map((txtFile) => {
+      const baseName = txtFile.replace(/-rym\.txt$/i, '');
+      const txtPath = path.join(musicDir, txtFile);
+      const rymUrl = (fs.readFileSync(txtPath, 'utf8') || '').trim();
+      const parsedInfo = parseRymReleaseInfo(rymUrl);
+
+      const preferredCover = imageFiles.find((file) => file.toLowerCase() === `${baseName.toLowerCase()}-cover.jpg`)
+        || imageFiles.find((file) => file.toLowerCase() === `${baseName.toLowerCase()}_cover.jpg`)
+        || imageFiles.find((file) => file.toLowerCase().startsWith(baseName.toLowerCase()) && /cover\.(jpg|jpeg|png|webp)$/i.test(file));
+
+      const title = parsedInfo.title || baseName.replace(/[-_]+/g, ' ').trim();
+
+      return {
+        id: baseName,
+        title,
+        artist: parsedInfo.artist || '',
+        album: parsedInfo.album || '',
+        rymUrl,
+        coverUrl: preferredCover ? `assets/music/${preferredCover}` : null
+      };
+    }).filter((item) => item.rymUrl);
+
+    res.json({ recommendations });
+  } catch (error) {
+    console.error('Failed to load Tru recommendations:', error);
+    res.status(500).json({ error: 'Failed to load Tru recommendations.' });
+  }
+});
+
 app.get('/api/music/random-albums', async (req, res) => {
   const requestedCount = Number.parseInt(req.query.count, 10);
   const count = Number.isInteger(requestedCount) ? Math.min(Math.max(requestedCount, 1), 20) : 8;

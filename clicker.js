@@ -1,5 +1,5 @@
 // Minimal cutscene hook (no-op on the standalone page)
-const preferences = { skipAllCutscenes: false, skipReincarnationCutscene: false };
+const preferences = loadPreferences();
 function triggerCutscene() {}
 
 // Clicker Game Logic
@@ -79,6 +79,35 @@ const bossAttackBtn = document.getElementById('bossAttackBtn');
 const prestigeBtn = document.getElementById('prestigeBtn');
 const prestigeMultiplierDisplay = document.getElementById('prestigeMultiplier');
 const stageNameDisplay = document.getElementById('stageName');
+
+// Options + Debug controls (standalone clicker page)
+const optionsBtn = document.getElementById('optionsBtn');
+const optionsModal = document.getElementById('optionsModal');
+const optionsClose = document.getElementById('optionsClose');
+const optionsCloseBtn = document.getElementById('optionsCloseBtn');
+const prefSkipReincarnation = document.getElementById('prefSkipReincarnation');
+const prefSkipAll = document.getElementById('prefSkipAll');
+const generateSaveCodeBtn = document.getElementById('generateSaveCodeBtn');
+const copySaveCodeBtn = document.getElementById('copySaveCodeBtn');
+const saveCodeOutput = document.getElementById('saveCodeOutput');
+const loadCodeInput = document.getElementById('loadCodeInput');
+const loadSaveCodeBtn = document.getElementById('loadSaveCodeBtn');
+const loadStatus = document.getElementById('loadStatus');
+
+const debugMenuBtn = document.getElementById('debugMenuBtn');
+const debugMenuModal = document.getElementById('debugMenuModal');
+const debugClose = document.getElementById('debugClose');
+const debugCloseBtn = document.getElementById('debugCloseBtn');
+const debugResetClicker = document.getElementById('debugResetClicker');
+const debugAddScore = document.getElementById('debugAddScore');
+const debugMaxAll = document.getElementById('debugMaxAll');
+const debugPrestige = document.getElementById('debugPrestige');
+const debugStageSelect = document.getElementById('debugStageSelect');
+const debugStageApply = document.getElementById('debugStageApply');
+
+function isAdminUser() {
+  return typeof authAPI !== 'undefined' && authAPI.isUserAdmin();
+}
 
 // Clicker selection buttons
 const clickerBtns = [
@@ -534,6 +563,89 @@ function updateCPS() {
   cpsDisplay.textContent = (clickTimes.length + totalAutoClickRate).toFixed(1);
 }
 
+function loadPreferences() {
+  try {
+    const raw = localStorage.getItem('clicker_prefs');
+    if (!raw) return { skipAllCutscenes: false, skipReincarnationCutscene: false };
+    const parsed = JSON.parse(raw);
+    return {
+      skipAllCutscenes: !!parsed.skipAllCutscenes,
+      skipReincarnationCutscene: !!parsed.skipReincarnationCutscene
+    };
+  } catch {
+    return { skipAllCutscenes: false, skipReincarnationCutscene: false };
+  }
+}
+
+function savePreferences() {
+  localStorage.setItem('clicker_prefs', JSON.stringify(preferences));
+}
+
+function applyPreferencesToUI() {
+  if (prefSkipReincarnation) prefSkipReincarnation.checked = !!preferences.skipReincarnationCutscene;
+  if (prefSkipAll) prefSkipAll.checked = !!preferences.skipAllCutscenes;
+}
+
+function getGameStateSnapshot() {
+  return {
+    v: 1,
+    t: Date.now(),
+    currentStage,
+    prestigeMultiplier,
+    clickerScore,
+    upgrades,
+    bossHealth,
+    maxBossHealth,
+    stages
+  };
+}
+
+function generateSaveCode() {
+  return btoa(unescape(encodeURIComponent(JSON.stringify(getGameStateSnapshot()))));
+}
+
+function refreshGameUI() {
+  const stage = stages[currentStage] || stages[0];
+  if (!stage) return;
+
+  stageNameDisplay.textContent = stage.name;
+  bossNameDisplay.textContent = stage.boss || '';
+  bossAssetDisplay.src = stage.bossImage || '';
+  prestigeMultiplierDisplay.textContent = prestigeMultiplier + 'x';
+
+  clickerScoreDisplay.textContent = formatNumber(clickerScore);
+  cpsDisplay.textContent = '0';
+  bossHealthDisplay.textContent = formatNumber(bossHealth);
+  const percent = maxBossHealth > 0 ? (bossHealth / maxBossHealth) * 100 : 0;
+  bossHealthBar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+
+  switchClicker(0);
+  updateClickPower();
+  updateUpgradeButtons();
+  updateBossVisibility();
+}
+
+function restoreGameFromCode(code) {
+  const json = decodeURIComponent(escape(atob(code)));
+  const state = JSON.parse(json);
+  if (!state || state.v !== 1) throw new Error('Unsupported save format');
+
+  if (autoClickInterval) clearInterval(autoClickInterval);
+
+  currentStage = Number.isInteger(state.currentStage) ? state.currentStage : 0;
+  prestigeMultiplier = state.prestigeMultiplier || 1;
+  clickerScore = state.clickerScore || 0;
+  bossHealth = state.bossHealth || 0;
+  maxBossHealth = state.maxBossHealth || bossHealth;
+
+  stages.length = 0;
+  (state.stages || []).forEach((stage) => stages.push(stage));
+  upgrades = state.upgrades || { clickPower: [0, 0, 0], autoClick: [0, 0] };
+
+  if (currentStage < 0 || currentStage >= stages.length) currentStage = 0;
+  refreshGameUI();
+}
+
 // Clicker button click - only adds score, doesn't damage boss
 clickerButton.addEventListener('click', () => {
   clickerScore += currentClickPower;
@@ -634,4 +746,161 @@ document.addEventListener('DOMContentLoaded', () => {
   switchClicker(0);
   updateUpgradeButtons();
   updateBossVisibility();
+
+  applyPreferencesToUI();
+
+  const adminMode = isAdminUser();
+  if (debugMenuBtn) {
+    if (adminMode) {
+      debugMenuBtn.classList.remove('hidden');
+    } else {
+      debugMenuBtn.classList.add('hidden');
+    }
+  }
+
+  if (debugMenuModal && !adminMode) {
+    debugMenuModal.classList.add('hidden');
+  }
+
+  if (optionsBtn && optionsModal) {
+    optionsBtn.addEventListener('click', () => optionsModal.classList.remove('hidden'));
+  }
+  if (optionsClose && optionsModal) {
+    optionsClose.addEventListener('click', () => optionsModal.classList.add('hidden'));
+  }
+  if (optionsCloseBtn && optionsModal) {
+    optionsCloseBtn.addEventListener('click', () => optionsModal.classList.add('hidden'));
+  }
+
+  if (prefSkipReincarnation) {
+    prefSkipReincarnation.addEventListener('change', () => {
+      preferences.skipReincarnationCutscene = prefSkipReincarnation.checked;
+      savePreferences();
+    });
+  }
+  if (prefSkipAll) {
+    prefSkipAll.addEventListener('change', () => {
+      preferences.skipAllCutscenes = prefSkipAll.checked;
+      savePreferences();
+    });
+  }
+
+  if (generateSaveCodeBtn) {
+    generateSaveCodeBtn.addEventListener('click', () => {
+      try {
+        saveCodeOutput.value = generateSaveCode();
+        if (loadStatus) {
+          loadStatus.textContent = '';
+          loadStatus.className = 'text-xs mt-2';
+        }
+      } catch {
+        if (loadStatus) {
+          loadStatus.textContent = 'Failed to generate save code.';
+          loadStatus.className = 'text-xs mt-2 text-red-400';
+        }
+      }
+    });
+  }
+
+  if (copySaveCodeBtn) {
+    copySaveCodeBtn.addEventListener('click', async () => {
+      if (!saveCodeOutput?.value) return;
+      try {
+        await navigator.clipboard.writeText(saveCodeOutput.value);
+        if (loadStatus) {
+          loadStatus.textContent = 'Save code copied to clipboard.';
+          loadStatus.className = 'text-xs mt-2 text-green-400';
+        }
+      } catch {
+        if (loadStatus) {
+          loadStatus.textContent = 'Copy failed.';
+          loadStatus.className = 'text-xs mt-2 text-red-400';
+        }
+      }
+    });
+  }
+
+  if (loadSaveCodeBtn) {
+    loadSaveCodeBtn.addEventListener('click', () => {
+      const code = (loadCodeInput?.value || '').trim();
+      if (!code) {
+        if (loadStatus) {
+          loadStatus.textContent = 'Please paste a save code.';
+          loadStatus.className = 'text-xs mt-2 text-yellow-400';
+        }
+        return;
+      }
+
+      try {
+        restoreGameFromCode(code);
+        if (loadStatus) {
+          loadStatus.textContent = 'Save loaded.';
+          loadStatus.className = 'text-xs mt-2 text-green-400';
+        }
+        if (optionsModal) optionsModal.classList.add('hidden');
+      } catch {
+        if (loadStatus) {
+          loadStatus.textContent = 'Invalid or corrupted save code.';
+          loadStatus.className = 'text-xs mt-2 text-red-400';
+        }
+      }
+    });
+  }
+
+  if (debugMenuBtn && debugMenuModal) {
+    debugMenuBtn.addEventListener('click', () => {
+      if (!isAdminUser()) return;
+      debugMenuModal.classList.remove('hidden');
+    });
+  }
+  if (debugClose && debugMenuModal) {
+    debugClose.addEventListener('click', () => debugMenuModal.classList.add('hidden'));
+  }
+  if (debugCloseBtn && debugMenuModal) {
+    debugCloseBtn.addEventListener('click', () => debugMenuModal.classList.add('hidden'));
+  }
+
+  if (debugResetClicker) {
+    debugResetClicker.addEventListener('click', () => resetClickerBtn.click());
+  }
+  if (debugAddScore) {
+    debugAddScore.addEventListener('click', () => {
+      clickerScore += 10000;
+      clickerScoreDisplay.textContent = formatNumber(clickerScore);
+      updateUpgradeButtons();
+    });
+  }
+  if (debugMaxAll) {
+    debugMaxAll.addEventListener('click', () => {
+      const stageData = stages[currentStage];
+      upgrades.clickPower = stageData.clickers.map((clicker) => clicker.maxLevel);
+      upgrades.autoClick = stageData.autoClickers.map((autoClicker) => autoClicker.maxLevel);
+      updateClickPower();
+      updateUpgradeButtons();
+      updateBossVisibility();
+    });
+  }
+  if (debugPrestige) {
+    debugPrestige.addEventListener('click', () => {
+      const stageData = stages[currentStage];
+      upgrades.clickPower = stageData.clickers.map((clicker) => clicker.maxLevel);
+      upgrades.autoClick = stageData.autoClickers.map((autoClicker) => autoClicker.maxLevel);
+      updateUpgradeButtons();
+      reincarnate();
+    });
+  }
+
+  if (debugStageSelect) {
+    debugStageSelect.innerHTML = stages.map((stageItem, idx) => `<option value="${idx}">${idx + 1}. ${stageItem.name}</option>`).join('');
+    debugStageSelect.value = String(currentStage);
+  }
+  if (debugStageApply && debugStageSelect) {
+    debugStageApply.addEventListener('click', () => {
+      const targetStage = Number.parseInt(debugStageSelect.value, 10);
+      if (!Number.isInteger(targetStage) || targetStage < 0 || targetStage >= stages.length) return;
+      currentStage = targetStage;
+      resetForNewStage();
+      debugStageSelect.value = String(currentStage);
+    });
+  }
 });

@@ -35,7 +35,7 @@
     </div>
     <div class="flex gap-3">
       <a href="https://anime.nexus" target="_blank" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-all duration-300 text-sm font-semibold">Use anime.nexus</a>
-      <a href="index.html" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-300 text-sm font-semibold">Dashboard</a>
+      <a id="backLink" href="index.html" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-all duration-300 text-sm font-semibold">Back to Dashboard</a>
     </div>
   </header>
 
@@ -130,5 +130,19 @@
   </div>
 
   <script src="anime.js" defer></script>
+  <script>
+    (function () {
+      const backLink = document.getElementById('backLink');
+      if (!backLink) return;
+      const from = new URLSearchParams(window.location.search).get('from');
+      if (from === 'landing') {
+        backLink.href = '/landing';
+        backLink.textContent = 'Back to Landing';
+      } else {
+        backLink.href = 'index.html';
+        backLink.textContent = 'Back to Dashboard';
+      }
+    })();
+  </script>
 </body>
 </html>

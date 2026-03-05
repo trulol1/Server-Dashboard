@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Clicker Game</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="auth-api-base" content="https://serverindex1.onrender.com/api" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="styles.css" />
   <style>
@@ -24,7 +25,11 @@
       <h1 class="text-3xl font-bold">Clicker Game</h1>
       <p class="text-slate-400 text-sm">Reincarnation Multiplier: <span id="prestigeMultiplier" class="text-purple-400 font-bold">1x</span></p>
     </div>
-    <a href="index.html" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all duration-300 text-sm">Back to Dashboard</a>
+    <div class="flex items-center gap-2">
+      <button id="optionsBtn" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all duration-300 text-sm">Options</button>
+      <button id="debugMenuBtn" class="hidden px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg transition-all duration-300 text-sm">🐛 Debug</button>
+      <a id="backLink" href="index.html" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all duration-300 text-sm">Back to Dashboard</a>
+    </div>
   </header>
 
   <main class="flex-1 p-0">
@@ -148,6 +153,108 @@
     </div>
   </main>
 
+  <div id="optionsModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center backdrop-blur-sm z-50">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-8 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-slate-100">Options</h2>
+        <button id="optionsClose" class="text-slate-400 hover:text-white text-xl">✕</button>
+      </div>
+
+      <div class="space-y-6">
+        <div class="bg-slate-800 rounded-lg p-4">
+          <h3 class="text-lg font-bold text-slate-100 mb-3">Save / Load</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-slate-400 text-sm mb-1">Save Code</label>
+              <textarea id="saveCodeOutput" class="w-full h-28 px-3 py-2 bg-slate-900 border border-slate-700 rounded text-slate-100 text-xs" readonly></textarea>
+              <div class="mt-2 flex gap-2">
+                <button id="generateSaveCodeBtn" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white text-sm">Generate Code</button>
+                <button id="copySaveCodeBtn" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-white text-sm">Copy</button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-slate-400 text-sm mb-1">Load Code</label>
+              <textarea id="loadCodeInput" class="w-full h-28 px-3 py-2 bg-slate-900 border border-slate-700 rounded text-slate-100 text-xs" placeholder="Paste save code here..."></textarea>
+              <div class="mt-2 flex gap-2">
+                <button id="loadSaveCodeBtn" class="px-3 py-2 bg-green-600 hover:bg-green-700 rounded text-white text-sm">Load Code</button>
+              </div>
+              <p id="loadStatus" class="text-xs mt-2"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-800 rounded-lg p-4">
+          <h3 class="text-lg font-bold text-slate-100 mb-3">Preferences</h3>
+          <div class="space-y-3">
+            <label class="flex items-center gap-3 text-sm">
+              <input id="prefSkipReincarnation" type="checkbox" class="accent-blue-500">
+              <span>Skip reincarnation cutscene</span>
+            </label>
+            <label class="flex items-center gap-3 text-sm">
+              <input id="prefSkipAll" type="checkbox" class="accent-blue-500">
+              <span>Skip all cutscenes</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end">
+        <button id="optionsCloseBtn" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white transition-all">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="debugMenuModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center backdrop-blur-sm z-50">
+    <div class="bg-slate-900 border border-yellow-500 rounded-2xl shadow-2xl p-8 w-full max-w-2xl max-h-96 overflow-y-auto">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-yellow-400">🐛 Debug Menu</h2>
+        <button id="debugClose" class="text-slate-400 hover:text-white text-xl">✕</button>
+      </div>
+
+      <div class="space-y-4">
+        <div class="bg-slate-800 rounded-lg p-4">
+          <h3 class="text-lg font-bold text-slate-100 mb-3">Clicker Game Debug</h3>
+          <div class="grid grid-cols-2 gap-3">
+            <button id="debugResetClicker" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-white transition-all">Reset Game</button>
+            <button id="debugAddScore" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded text-white transition-all">Add 10k Score</button>
+            <button id="debugMaxAll" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white transition-all">Max All Upgrades</button>
+            <button id="debugPrestige" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded text-white transition-all">Force Reincarnation</button>
+          </div>
+        </div>
+
+        <div class="bg-slate-800 rounded-lg p-4">
+          <h3 class="text-lg font-bold text-slate-100 mb-3">Stage Controls</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+            <div class="md:col-span-2">
+              <label for="debugStageSelect" class="block text-slate-400 text-sm mb-1">Select Stage</label>
+              <select id="debugStageSelect" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded text-slate-100 text-sm"></select>
+            </div>
+            <div>
+              <button id="debugStageApply" class="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded text-white transition-all">Switch Stage</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button id="debugCloseBtn" class="w-full mt-6 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white transition-all">Close Debug Menu</button>
+    </div>
+  </div>
+
+  <script src="auth-api.js"></script>
   <script src="clicker.js" defer></script>
+  <script>
+    (function () {
+      const backLink = document.getElementById('backLink');
+      if (!backLink) return;
+      const from = new URLSearchParams(window.location.search).get('from');
+      if (from === 'landing') {
+        backLink.href = '/landing';
+        backLink.textContent = 'Back to Landing';
+      } else {
+        backLink.href = 'index.html';
+        backLink.textContent = 'Back to Dashboard';
+      }
+    })();
+  </script>
 </body>
 </html>

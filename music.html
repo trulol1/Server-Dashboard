@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Music Discovery</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="auth-api-base" content="https://serverindex1.onrender.com/api" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="styles.css" />
   <style>
@@ -51,7 +52,7 @@
       <h1 class="text-3xl font-bold">🎧 Music Discovery</h1>
       <p class="text-slate-400 text-sm">Daily RYM album pick + quick Spotify playlist links</p>
     </div>
-    <a href="index.html" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all duration-300 text-sm">Back to Dashboard</a>
+    <a id="backLink" href="index.html" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all duration-300 text-sm">Back to Dashboard</a>
   </header>
 
   <main class="p-6">
@@ -104,5 +105,19 @@
   </main>
 
   <script src="music.js" defer></script>
+  <script>
+    (function () {
+      const backLink = document.getElementById('backLink');
+      if (!backLink) return;
+      const from = new URLSearchParams(window.location.search).get('from');
+      if (from === 'landing') {
+        backLink.href = '/landing';
+        backLink.textContent = 'Back to Landing';
+      } else {
+        backLink.href = 'index.html';
+        backLink.textContent = 'Back to Dashboard';
+      }
+    })();
+  </script>
 </body>
 </html>

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Slyphie's Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -165,105 +166,8 @@
       color: #fda4af;
     }
 
-    .message-modal {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
-      z-index: 40;
-      padding: 20px;
-    }
-
     .hidden {
       display: none !important;
-    }
-
-    .message-modal-content {
-      width: 100%;
-      max-width: 560px;
-      border-radius: 10px;
-      border: 1px solid rgba(100, 150, 255, 0.25);
-      background: rgba(20, 25, 45, 0.95);
-      padding: 22px;
-    }
-
-    .message-modal-content h3 {
-      font-size: 1.3em;
-      color: #d7e2ff;
-      margin-bottom: 14px;
-      font-weight: 500;
-    }
-
-    .message-modal-content textarea,
-    .message-modal-content input {
-      width: 100%;
-      padding: 10px 12px;
-      margin-bottom: 10px;
-      border-radius: 6px;
-      border: 1px solid rgba(100, 150, 255, 0.3);
-      background: rgba(10, 14, 39, 0.85);
-      color: #e0e0e0;
-      font-family: 'Inter', sans-serif;
-    }
-
-    .message-modal-actions {
-      margin-top: 12px;
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-    }
-
-    .message-modal-actions button {
-      padding: 8px 12px;
-      border-radius: 6px;
-      border: 1px solid rgba(100, 150, 255, 0.3);
-      color: #fff;
-      cursor: pointer;
-    }
-
-    .message-modal-actions .close-btn {
-      background: rgba(100, 150, 255, 0.2);
-    }
-
-    .message-modal-actions .post-btn {
-      background: linear-gradient(135deg, #6496ff, #64b5ff);
-      border-color: transparent;
-    }
-
-    .color-row {
-      display: flex;
-      gap: 8px;
-      margin: 4px 0 10px;
-    }
-
-    .color-btn {
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.45);
-      cursor: pointer;
-      padding: 0;
-    }
-
-    .ring-2 {
-      box-shadow: 0 0 0 2px #fff;
-    }
-
-    .message-flags {
-      display: flex;
-      gap: 16px;
-      margin-top: 4px;
-      color: #b8c7ef;
-      font-size: 0.88em;
-    }
-
-    .message-flags label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
     }
 
     /* Main container */
@@ -579,14 +483,21 @@
         <span class="service-icon">🎲</span>
         <h2>Random Generator</h2>
         <p>Generate configurable random numbers and roll dice with custom sides, counts, and modifiers.</p>
-        <a href="/random.html">Open Tool</a>
+        <a href="/random.html?from=landing">Open Tool</a>
       </div>
 
       <div class="service-card">
         <span class="service-icon">🎧</span>
         <h2>Music Discovery</h2>
         <p>Get random Spotify album recommendations and quickly open your core playlists.</p>
-        <a href="/music.html">Open Music</a>
+        <a href="/music.html?from=landing">Open Music</a>
+      </div>
+
+      <div class="service-card">
+        <span class="service-icon">🖱️</span>
+        <h2>Clicker Game</h2>
+        <p>Play the clicker game with stages, upgrades, and reincarnation progression.</p>
+        <a href="/clicker.html?from=landing">Play Game</a>
       </div>
 
     </div>
@@ -613,25 +524,53 @@
     <p>© 2026 Slyphie's Hub | All services secured and private</p>
   </footer>
 
-  <div id="messageModal" class="message-modal hidden">
-    <div class="message-modal-content">
-      <h3>Post Announcement</h3>
-      <textarea id="messageText" rows="4" placeholder="Message text..."></textarea>
-      <input id="messageDuration" type="number" min="0" value="0" placeholder="Duration in seconds (0 = permanent)" />
-      <div class="color-row">
-        <button type="button" class="color-btn ring-2" data-color="#3b82f6" style="background:#3b82f6;"></button>
-        <button type="button" class="color-btn" data-color="#10b981" style="background:#10b981;"></button>
-        <button type="button" class="color-btn" data-color="#f59e0b" style="background:#f59e0b;"></button>
-        <button type="button" class="color-btn" data-color="#ef4444" style="background:#ef4444;"></button>
-        <button type="button" class="color-btn" data-color="#a855f7" style="background:#a855f7;"></button>
-      </div>
-      <div class="message-flags">
-        <label><input id="showOnLanding" type="checkbox" checked /> Show on landing</label>
-        <label><input id="showOnDashboard" type="checkbox" checked /> Show on dashboard</label>
-      </div>
-      <div class="message-modal-actions">
-        <button id="closeMessageModalBtn" type="button" class="close-btn">Cancel</button>
-        <button id="postMessageBtn" type="button" class="post-btn">Post</button>
+  <div id="messageModal" class="hidden fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-slate-800 rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="p-8">
+        <h2 class="text-2xl font-bold mb-6 text-slate-100">Post Dashboard Message</h2>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-slate-300 mb-2">Message Text</label>
+            <textarea id="messageText" class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="Enter your message..."></textarea>
+          </div>
+
+          <div>
+            <label class="block text-slate-300 mb-2">Color</label>
+            <div class="grid grid-cols-4 gap-2">
+              <button type="button" class="color-btn w-full h-12 rounded-lg bg-blue-500 hover:ring-2 ring-white transition" data-color="#3b82f6"></button>
+              <button type="button" class="color-btn w-full h-12 rounded-lg bg-green-500 hover:ring-2 ring-white transition" data-color="#10b981"></button>
+              <button type="button" class="color-btn w-full h-12 rounded-lg bg-yellow-500 hover:ring-2 ring-white transition" data-color="#f59e0b"></button>
+              <button type="button" class="color-btn w-full h-12 rounded-lg bg-red-500 hover:ring-2 ring-white transition" data-color="#ef4444"></button>
+              <button type="button" class="color-btn w-full h-12 rounded-lg bg-purple-500 hover:ring-2 ring-white transition" data-color="#a855f7"></button>
+              <button type="button" class="color-btn w-full h-12 rounded-lg bg-pink-500 hover:ring-2 ring-white transition" data-color="#ec4899"></button>
+              <button type="button" class="color-btn w-full h-12 rounded-lg bg-indigo-500 hover:ring-2 ring-white transition" data-color="#6366f1"></button>
+              <button type="button" class="color-btn w-full h-12 rounded-lg bg-slate-500 hover:ring-2 ring-white transition" data-color="#64748b"></button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-slate-300 mb-2">Duration (seconds, 0 = permanent)</label>
+            <input type="number" id="messageDuration" class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500" value="0" min="0" placeholder="0">
+          </div>
+
+          <div class="space-y-2 border-t border-slate-600 pt-4">
+            <label class="flex items-center text-slate-300 cursor-pointer">
+              <input type="checkbox" id="showOnLanding" class="w-4 h-4 accent-blue-500" checked>
+              <span class="ml-2">Show on Landing Page</span>
+            </label>
+            <label class="flex items-center text-slate-300 cursor-pointer">
+              <input type="checkbox" id="showOnDashboard" class="w-4 h-4 accent-blue-500" checked>
+              <span class="ml-2">Show on Dashboard</span>
+            </label>
+          </div>
+
+        </div>
+
+        <div class="flex gap-3 mt-6">
+          <button type="button" id="postMessageBtn" class="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition cursor-pointer">Post Message</button>
+          <button type="button" id="closeMessageModalBtn" class="px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition cursor-pointer">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
@@ -714,6 +653,18 @@
       return new Date(timestamp).toLocaleDateString();
     }
 
+    const suggestionStatusMeta = {
+      pending: { label: 'Pending' },
+      planned: { label: 'Planned' },
+      approved: { label: 'Approved' },
+      rejected: { label: 'Rejected' },
+      resolved: { label: 'Resolved' }
+    };
+
+    function getStatusLabel(status) {
+      return (suggestionStatusMeta[status] || suggestionStatusMeta.pending).label;
+    }
+
     function updateSuggestionCount(count) {
       const countEl = document.getElementById('suggestionCount');
       if (countEl) countEl.textContent = count;
@@ -738,7 +689,7 @@
         return `
           <article class="suggestion-item">
             <div class="suggestion-meta">
-              <strong>${safeName}</strong>
+              <strong>${safeName} • ${getStatusLabel(suggestion.status || 'pending')}</strong>
               <span>${dateText}</span>
             </div>
             <p>${safeText}</p>
@@ -746,6 +697,15 @@
               <button type="button" data-suggestion-vote="up" data-suggestion-id="${suggestion.id}">👍 ${votes.up}</button>
               <button type="button" data-suggestion-vote="down" data-suggestion-id="${suggestion.id}">👎 ${votes.down}</button>
               ${isAdmin ? `<button type="button" data-suggestion-delete="${suggestion.id}">🗑 Delete</button>` : ''}
+              ${isAdmin ? `
+                <select data-suggestion-status="${suggestion.id}" style="padding: 6px 10px; background: rgba(10, 14, 39, 0.75); border: 1px solid rgba(100, 150, 255, 0.2); color: #d7e2ff; border-radius: 5px; font-size: 0.85em;">
+                  <option value="pending" ${(suggestion.status || 'pending') === 'pending' ? 'selected' : ''}>Pending</option>
+                  <option value="planned" ${suggestion.status === 'planned' ? 'selected' : ''}>Planned</option>
+                  <option value="approved" ${suggestion.status === 'approved' ? 'selected' : ''}>Approved</option>
+                  <option value="rejected" ${suggestion.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+                  <option value="resolved" ${suggestion.status === 'resolved' ? 'selected' : ''}>Resolved</option>
+                </select>
+              ` : ''}
             </div>
           </article>
         `;
@@ -774,6 +734,15 @@
       });
 
       if (isAdmin) {
+        suggestionsList.querySelectorAll('[data-suggestion-status]').forEach((select) => {
+          select.addEventListener('change', async () => {
+            const suggestionId = select.getAttribute('data-suggestion-status');
+            const status = select.value;
+            if (!suggestionId || !status) return;
+            await updateSuggestionStatus(suggestionId, status);
+          });
+        });
+
         suggestionsList.querySelectorAll('[data-suggestion-delete]').forEach((btn) => {
           btn.addEventListener('click', async () => {
             const suggestionId = btn.getAttribute('data-suggestion-delete');
@@ -832,6 +801,25 @@
         }
       } catch (error) {
         console.error('Error deleting suggestion:', error);
+      }
+    }
+
+    async function updateSuggestionStatus(suggestionId, status) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/suggestions/${suggestionId}/status`, {
+          method: 'POST',
+          headers: authAPI.getAuthHeader(),
+          body: JSON.stringify({ status })
+        });
+
+        if (response.ok) {
+          await loadSuggestions();
+          if (typeof loadMessages === 'function') {
+            await loadMessages();
+          }
+        }
+      } catch (error) {
+        console.error('Error updating suggestion status:', error);
       }
     }
 
