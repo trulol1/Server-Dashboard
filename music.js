@@ -6,6 +6,20 @@ const openBanleBtn = document.getElementById('openBanleBtn');
 const playlistStatus = document.getElementById('playlistStatus');
 const toListenEmbed = document.getElementById('toListenEmbed');
 
+const musicBackgroundImages = [
+  'assets/music/bastard-bunii-cover.jpg',
+  'assets/music/boy-2hollis-cover.jpg',
+  'assets/music/censusdesignated-janeremover-cover.jpg',
+  'assets/music/fetedelavanille-lucybedroque-cover.jpg',
+  'assets/music/ghostholding-janeremover-cover.jpg',
+  'assets/music/halfblood-slayr-cover.jpg',
+  'assets/music/inelsewhere-zayok-cover.jpg',
+  'assets/music/KessokuBand_bocchitherock_cover.jpg',
+  'assets/music/melancholyhotorcold-sayako-cover.jpg',
+  'assets/music/persona5ost-persona-cover.jpg',
+  'assets/music/rewired-kuru-cover.jpg'
+];
+
 const playlistLinks = {
   toListen: 'https://open.spotify.com/playlist/1RqJJiGxH5xxuogjxGsFpw',
   dailySongless: 'https://lessgames.com/songless',
@@ -101,6 +115,24 @@ function getDailyIndex(seedText, size) {
     hash |= 0;
   }
   return Math.abs(hash) % size;
+}
+
+function applyRandomMusicBackground() {
+  if (!musicBackgroundImages.length) return;
+
+  const randomIndex = Math.floor(Math.random() * musicBackgroundImages.length);
+  const chosenImage = musicBackgroundImages[randomIndex];
+  const preload = new Image();
+
+  preload.onload = () => {
+    document.body.style.backgroundImage = `url('${chosenImage}')`;
+  };
+
+  preload.onerror = () => {
+    document.body.style.backgroundImage = '';
+  };
+
+  preload.src = chosenImage;
 }
 
 function isWithinLastYear(releaseDate, now = new Date()) {
@@ -209,8 +241,14 @@ function openPlaylist(url, label) {
   window.open(url, '_blank', 'noopener');
 }
 
-openDailySonglessBtn.addEventListener('click', () => openPlaylist(playlistLinks.dailySongless, 'Daily Songless'));
-openBanleBtn.addEventListener('click', () => openPlaylist(playlistLinks.banle, 'Banle'));
+if (openDailySonglessBtn) {
+  openDailySonglessBtn.addEventListener('click', () => openPlaylist(playlistLinks.dailySongless, 'Daily Songless'));
+}
 
+if (openBanleBtn) {
+  openBanleBtn.addEventListener('click', () => openPlaylist(playlistLinks.banle, 'Banle'));
+}
+
+applyRandomMusicBackground();
 updateToListenEmbed();
 loadRandomAlbums();

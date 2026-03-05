@@ -8,11 +8,25 @@
   <link rel="stylesheet" href="styles.css" />
   <style>
     body {
-      background-image: none !important;
-      background: #0f172a !important;
+      position: relative;
+      background-color: #0f172a;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-attachment: fixed;
     }
     body::before {
-      display: none !important;
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.72);
+      pointer-events: none;
+      z-index: 0;
+    }
+    header,
+    main {
+      position: relative;
+      z-index: 1;
     }
   </style>
 </head>

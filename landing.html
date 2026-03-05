@@ -168,7 +168,7 @@
     .message-modal {
       position: fixed;
       inset: 0;
-      display: none;
+      display: flex;
       align-items: center;
       justify-content: center;
       background: rgba(0, 0, 0, 0.5);
@@ -177,8 +177,8 @@
       padding: 20px;
     }
 
-    .message-modal.show {
-      display: flex;
+    .hidden {
+      display: none !important;
     }
 
     .message-modal-content {
@@ -613,7 +613,7 @@
     <p>© 2026 Slyphie's Hub | All services secured and private</p>
   </footer>
 
-  <div id="messageModal" class="message-modal">
+  <div id="messageModal" class="message-modal hidden">
     <div class="message-modal-content">
       <h3>Post Announcement</h3>
       <textarea id="messageText" rows="4" placeholder="Message text..."></textarea>
