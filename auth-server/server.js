@@ -15,7 +15,6 @@ const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'skibiditoilet';
 const SPOTIFY_CLIENT_ID = (process.env.SPOTIFY_CLIENT_ID || '').trim();
 const SPOTIFY_CLIENT_SECRET = (process.env.SPOTIFY_CLIENT_SECRET || '').trim();
-const DISCORD_MENTION_USER_ID = (process.env.DISCORD_MENTION_USER_ID || '').replace(/[<@!>]/g, '').trim();
 
 let spotifyTokenCache = {
   accessToken: null,
@@ -145,18 +144,39 @@ function toSuggestionResponse(suggestion) {
   };
 }
 
+function getDiscordConfig() {
+  const unquote = (value) => value.replace(/^['\"]|['\"]$/g, '').trim();
+
+  const webhookUrl = unquote((process.env.DISCORD_SUGGESTIONS_WEBHOOK_URL || '').trim());
+  const botTokenRaw = unquote((process.env.DISCORD_BOT_TOKEN || '').trim());
+  const channelId = unquote((process.env.DISCORD_SUGGESTIONS_CHANNEL_ID || '').trim());
+  const mentionUserIdRaw = unquote((process.env.DISCORD_MENTION_USER_ID || '').trim()).replace(/[<@!>]/g, '').trim();
+
+  const botToken = botTokenRaw.replace(/^Bot\s+/i, '').trim();
+  const mentionUserId = /^\d{17,20}$/.test(mentionUserIdRaw) ? mentionUserIdRaw : '';
+
+  return {
+    webhookUrl,
+    botToken,
+    channelId,
+    mentionUserId
+  };
+}
+
 function getDiscordMentionPayload() {
-  if (!DISCORD_MENTION_USER_ID) {
+  const { mentionUserId } = getDiscordConfig();
+
+  if (!mentionUserId) {
     return {
       allowed_mentions: { parse: [] }
     };
   }
 
   return {
-    content: `<@${DISCORD_MENTION_USER_ID}>`,
+    content: `<@${mentionUserId}>`,
     allowed_mentions: {
       parse: [],
-      users: [DISCORD_MENTION_USER_ID]
+      users: [mentionUserId]
     }
   };
 }
@@ -377,9 +397,7 @@ app.post('/api/suggestions', async (req, res) => {
   suggestions.unshift(suggestion);
   saveSuggestions();
 
-  const WEBHOOK_URL = process.env.DISCORD_SUGGESTIONS_WEBHOOK_URL;
-  const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
-  const CHANNEL_ID = process.env.DISCORD_SUGGESTIONS_CHANNEL_ID;
+  const { webhookUrl: WEBHOOK_URL, botToken: BOT_TOKEN, channelId: CHANNEL_ID } = getDiscordConfig();
   let discordPosted = false;
   let discordError = null;
 
@@ -448,9 +466,7 @@ app.get('/api/suggestions', (req, res) => {
 });
 
 app.get('/api/suggestions/health', (req, res) => {
-  const WEBHOOK_URL = process.env.DISCORD_SUGGESTIONS_WEBHOOK_URL;
-  const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
-  const CHANNEL_ID = process.env.DISCORD_SUGGESTIONS_CHANNEL_ID;
+  const { webhookUrl: WEBHOOK_URL, botToken: BOT_TOKEN, channelId: CHANNEL_ID, mentionUserId } = getDiscordConfig();
 
   res.json({
     status: 'ok',
@@ -458,7 +474,8 @@ app.get('/api/suggestions/health', (req, res) => {
     discordConfigured: Boolean(WEBHOOK_URL || (BOT_TOKEN && CHANNEL_ID)),
     discordWebhookSet: Boolean(WEBHOOK_URL),
     discordBotTokenSet: Boolean(BOT_TOKEN),
-    discordChannelIdSet: Boolean(CHANNEL_ID)
+    discordChannelIdSet: Boolean(CHANNEL_ID),
+    discordMentionUserSet: Boolean(mentionUserId)
   });
 });
 
@@ -535,9 +552,7 @@ app.delete('/api/suggestions/:id', verifyToken, requireAdmin, (req, res) => {
 });
 
 async function postDiscordStatusUpdate(suggestion) {
-  const WEBHOOK_URL = process.env.DISCORD_SUGGESTIONS_WEBHOOK_URL;
-  const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
-  const CHANNEL_ID = process.env.DISCORD_SUGGESTIONS_CHANNEL_ID;
+  const { webhookUrl: WEBHOOK_URL, botToken: BOT_TOKEN, channelId: CHANNEL_ID } = getDiscordConfig();
 
   if (!WEBHOOK_URL && !(BOT_TOKEN && CHANNEL_ID)) {
     return;
