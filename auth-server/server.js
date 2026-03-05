@@ -15,6 +15,7 @@ const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'skibiditoilet';
 const SPOTIFY_CLIENT_ID = (process.env.SPOTIFY_CLIENT_ID || '').trim();
 const SPOTIFY_CLIENT_SECRET = (process.env.SPOTIFY_CLIENT_SECRET || '').trim();
+const DISCORD_MENTION_USER_ID = (process.env.DISCORD_MENTION_USER_ID || '').replace(/[<@!>]/g, '').trim();
 
 let spotifyTokenCache = {
   accessToken: null,
@@ -141,6 +142,22 @@ function toSuggestionResponse(suggestion) {
     createdAt: suggestion.createdAt,
     status: suggestion.status,
     votes: suggestion.votes
+  };
+}
+
+function getDiscordMentionPayload() {
+  if (!DISCORD_MENTION_USER_ID) {
+    return {
+      allowed_mentions: { parse: [] }
+    };
+  }
+
+  return {
+    content: `<@${DISCORD_MENTION_USER_ID}>`,
+    allowed_mentions: {
+      parse: [],
+      users: [DISCORD_MENTION_USER_ID]
+    }
   };
 }
 
@@ -368,6 +385,7 @@ app.post('/api/suggestions', async (req, res) => {
 
   if (WEBHOOK_URL || (BOT_TOKEN && CHANNEL_ID)) {
     const payload = {
+      ...getDiscordMentionPayload(),
       embeds: [
         {
           title: '💡 New Suggestion',
@@ -542,6 +560,7 @@ async function postDiscordStatusUpdate(suggestion) {
   };
 
   const payload = {
+    ...getDiscordMentionPayload(),
     embeds: [
       {
         title: `${statusEmojis[suggestion.status]} Suggestion Status Updated`,

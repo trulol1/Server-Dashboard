@@ -211,6 +211,126 @@
       transform: none;
     }
 
+    .suggestions-section {
+      margin-top: 10px;
+      padding: 30px;
+      background: rgba(20, 25, 45, 0.7);
+      border: 1px solid rgba(100, 150, 255, 0.2);
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+    }
+
+    .suggestions-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .suggestions-header h2 {
+      font-size: 1.8em;
+      font-weight: 300;
+      color: #6496ff;
+      letter-spacing: 1px;
+    }
+
+    .suggestion-count {
+      color: #99aabb;
+      font-size: 0.95em;
+    }
+
+    .suggestion-form {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .suggestion-form input,
+    .suggestion-form textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 6px;
+      border: 1px solid rgba(100, 150, 255, 0.3);
+      background: rgba(10, 14, 39, 0.8);
+      color: #e0e0e0;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .suggestion-form textarea {
+      resize: vertical;
+      min-height: 110px;
+    }
+
+    .suggestion-form button {
+      justify-self: start;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #7c5cff, #9a6dff);
+      color: #fff;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .suggestion-form button:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .suggestions-list {
+      display: grid;
+      gap: 12px;
+      max-height: 420px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .suggestion-item {
+      background: rgba(35, 45, 80, 0.75);
+      border: 1px solid rgba(100, 150, 255, 0.2);
+      border-left: 4px solid #7c5cff;
+      border-radius: 6px;
+      padding: 14px;
+    }
+
+    .suggestion-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+      color: #9fb0dd;
+      font-size: 0.85em;
+    }
+
+    .suggestion-item p {
+      color: #d5def8;
+      line-height: 1.55;
+    }
+
+    .suggestion-votes {
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .suggestion-votes button {
+      padding: 6px 10px;
+      background: rgba(10, 14, 39, 0.75);
+      border: 1px solid rgba(100, 150, 255, 0.2);
+      color: #d7e2ff;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.85em;
+    }
+
+    .suggestion-votes button:hover {
+      border-color: rgba(100, 150, 255, 0.45);
+    }
+
     /* Footer */
     footer {
       position: relative;
@@ -299,7 +419,31 @@
         <p>Get random Spotify album recommendations and quickly open your core playlists.</p>
         <a href="/music.html">Open Music</a>
       </div>
+
+      <div class="service-card">
+        <span class="service-icon">💡</span>
+        <h2>Suggestions</h2>
+        <p>Share ideas and vote on community suggestions directly from the landing page.</p>
+        <a href="#suggestionsSection">Open Suggestions</a>
+      </div>
     </div>
+
+    <section id="suggestionsSection" class="suggestions-section">
+      <div class="suggestions-header">
+        <h2>Community Suggestions</h2>
+        <p class="suggestion-count">Total: <span id="suggestionCount">0</span></p>
+      </div>
+
+      <form id="suggestionForm" class="suggestion-form">
+        <input id="suggestionName" type="text" placeholder="Your name" />
+        <textarea id="suggestionText" placeholder="What would you like to suggest?"></textarea>
+        <button id="submitSuggestionBtn" type="submit">Submit Suggestion</button>
+      </form>
+
+      <div id="suggestionsList" class="suggestions-list">
+        <p style="color: #99aabb; text-align: center; padding: 10px 0;">Loading suggestions...</p>
+      </div>
+    </section>
   </div>
 
   <footer>
@@ -353,6 +497,139 @@
       card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
       observer.observe(card);
     });
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function getSuggestionClientId() {
+      const key = 'suggestionClientId';
+      let id = localStorage.getItem(key);
+      if (!id) {
+        id = `client_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+        localStorage.setItem(key, id);
+      }
+      return id;
+    }
+
+    function formatSuggestionDate(timestamp) {
+      if (!timestamp) return '';
+      return new Date(timestamp).toLocaleDateString();
+    }
+
+    function updateSuggestionCount(count) {
+      const countEl = document.getElementById('suggestionCount');
+      if (countEl) countEl.textContent = count;
+    }
+
+    function renderSuggestions(suggestions) {
+      const suggestionsList = document.getElementById('suggestionsList');
+      if (!suggestionsList) return;
+
+      if (!suggestions.length) {
+        suggestionsList.innerHTML = '<p style="color: #99aabb; text-align: center; padding: 10px 0;">No suggestions yet. Be the first to post one.</p>';
+        return;
+      }
+
+      suggestionsList.innerHTML = suggestions.map((suggestion) => {
+        const safeName = escapeHtml(suggestion.name || 'Anonymous');
+        const safeText = escapeHtml(suggestion.text || '');
+        const votes = suggestion.votes || { up: 0, down: 0 };
+        const dateText = formatSuggestionDate(suggestion.createdAt || suggestion.timestamp);
+
+        return `
+          <article class="suggestion-item">
+            <div class="suggestion-meta">
+              <strong>${safeName}</strong>
+              <span>${dateText}</span>
+            </div>
+            <p>${safeText}</p>
+            <div class="suggestion-votes">
+              <button type="button" data-suggestion-vote="up" data-suggestion-id="${suggestion.id}">👍 ${votes.up}</button>
+              <button type="button" data-suggestion-vote="down" data-suggestion-id="${suggestion.id}">👎 ${votes.down}</button>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      suggestionsList.querySelectorAll('[data-suggestion-vote]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const direction = btn.getAttribute('data-suggestion-vote');
+          const suggestionId = btn.getAttribute('data-suggestion-id');
+          if (!suggestionId) return;
+
+          try {
+            const response = await fetch(`${API_BASE_URL}/suggestions/${suggestionId}/vote`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ direction, voterId: getSuggestionClientId() })
+            });
+
+            if (response.ok) {
+              await loadSuggestions();
+            }
+          } catch (error) {
+            console.error('Error voting on suggestion:', error);
+          }
+        });
+      });
+    }
+
+    async function loadSuggestions() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/suggestions`);
+        const suggestions = await response.json();
+        const list = Array.isArray(suggestions) ? suggestions : [];
+        renderSuggestions(list);
+        updateSuggestionCount(list.length);
+      } catch (error) {
+        console.error('Failed to load suggestions:', error);
+        renderSuggestions([]);
+      }
+    }
+
+    async function createSuggestion(name, text) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/suggestions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, text })
+        });
+
+        if (response.ok) {
+          await loadSuggestions();
+          return true;
+        }
+      } catch (error) {
+        console.error('Error posting suggestion:', error);
+      }
+
+      return false;
+    }
+
+    const suggestionForm = document.getElementById('suggestionForm');
+    if (suggestionForm) {
+      suggestionForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const nameInput = document.getElementById('suggestionName');
+        const textInput = document.getElementById('suggestionText');
+        const name = nameInput.value.trim();
+        const text = textInput.value.trim();
+
+        if (!name || !text) return;
+
+        const ok = await createSuggestion(name, text);
+        if (ok) {
+          nameInput.value = '';
+          textInput.value = '';
+        }
+      });
+    }
+
+    loadSuggestions();
   </script>
 </body>
 </html>

@@ -87,6 +87,13 @@ const rymRecommendations = [
   }
 ];
 
+const fallbackRecommendation = {
+  title: 'nettspend - BAFK',
+  rymRating: null,
+  releaseDate: 'Backup pick',
+  url: 'https://rateyourmusic.com/search?searchterm=nettspend%20BAFK&searchtype=l'
+};
+
 function getDailyIndex(seedText, size) {
   let hash = 0;
   for (let i = 0; i < seedText.length; i++) {
@@ -109,13 +116,17 @@ function renderAlbumCard(album) {
   const card = document.createElement('div');
   card.className = 'bg-slate-900 border border-slate-700 rounded-lg overflow-hidden shadow';
 
+  const ratingText = typeof album.rymRating === 'number'
+    ? `RYM rating: ${album.rymRating.toFixed(2)} / 5.00`
+    : 'RYM rating: N/A (backup recommendation)';
+
   card.innerHTML = `
     <div class="bg-slate-800 px-4 py-6 text-center text-slate-300 text-sm">
       Rate Your Music album page link
     </div>
     <div class="p-3">
       <p class="font-semibold text-sm line-clamp-2">${album.name}</p>
-      <p class="text-xs text-slate-400 mt-1 line-clamp-2">RYM rating: ${album.rymRating.toFixed(2)} / 5.00</p>
+      <p class="text-xs text-slate-400 mt-1 line-clamp-2">${ratingText}</p>
       <p class="text-xs text-slate-400 mt-1 line-clamp-2">Released: ${album.releaseDate}</p>
       <p class="text-xs text-slate-500 mt-1">Rate Your Music recommendation</p>
       <a href="${album.url || '#'}" target="_blank" rel="noopener noreferrer" class="inline-block mt-3 text-sm px-3 py-1 bg-indigo-600 hover:bg-indigo-700 rounded">Open on Rate Your Music</a>
@@ -133,7 +144,15 @@ async function loadRandomAlbums() {
   const eligible = rymRecommendations.filter((item) => isWithinLastYear(item.releaseDate, now));
 
   if (!eligible.length) {
-    albumsStatus.textContent = 'No eligible albums from the last year are configured.';
+    const fallbackAlbum = {
+      name: fallbackRecommendation.title,
+      rymRating: fallbackRecommendation.rymRating,
+      releaseDate: fallbackRecommendation.releaseDate,
+      url: fallbackRecommendation.url
+    };
+
+    albumsGrid.appendChild(renderAlbumCard(fallbackAlbum));
+    albumsStatus.textContent = 'RYM recommendation unavailable today • Showing backup pick';
     return;
   }
 
